@@ -1,6 +1,9 @@
 # Local .terraform directories
 **/.terraform/*
 
+.terraform.lock.hcl
+
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
@@ -30,3 +33,4 @@ override.tf.json
 
 
 response.json
+tf-generator.zip
