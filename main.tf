@@ -91,3 +91,32 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+resource "aws_iam_user" "retool_lambda_invoker" {
+  name = "retool_lambda_invoker"
+}
+
+resource "aws_iam_access_key" "retool_lambda_invoker" {
+  user = aws_iam_user.retool_lambda_invoker.name
+}
+
+resource "aws_iam_user_policy" "retool_lambda_invoker_policy" {
+  name = "test"
+  user = aws_iam_user.retool_lambda_invoker.name
+
+  policy = <<EOF
+{
+	  "Version": "2012-10-17",
+	  "Statement": [
+		  {
+			  "Effect": "Allow",
+			  "Action": [
+				  "lambda:ListFunctions",
+				  "lambda:InvokeFunction"
+			  ],
+			  "Resource": "*"
+		  }
+	  ]
+  }
+EOF
+}
