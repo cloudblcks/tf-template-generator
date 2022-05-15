@@ -1,73 +1,114 @@
 <html>
-  <head> </head>
+  <head>
+    <script>
+      window.onload = function () {
+        document
+          .getElementById("hosting")
+          .addEventListener("change", updateForm);
+        updateForm();
+      };
+
+      function updateForm() {
+        var hosting = document.getElementById("hosting").value;
+        var vm_div = document.getElementById("vm_div");
+        var runtime_div = document.getElementById("runtime_div");
+        var db_div = document.getElementById("db_div");
+        switch (hosting) {
+          case "vm":
+            runtime_div.style.display = "none";
+            vm_div.style.display = "block";
+            db_div.style.display = "block";
+            break;
+          case "lambda":
+            runtime_div.style.display = "block";
+            vm_div.style.display = "none";
+            db_div.style.display = "block";
+            break;
+          case "static":
+            runtime_div.style.display = "none";
+            vm_div.style.display = "none";
+            db_div.style.display = "none";
+          case "docker":
+            runtime_div.style.display = "none";
+            vm_div.style.display = "none";
+            db_div.style.display = "block";
+            break;
+        }
+      }
+    </script>
+  </head>
 
   <body>
-    <form action="https://t5pdexr658.execute-api.eu-west-1.amazonaws.com/serverless_lambda_stage/generate" method="get">
-      <label for="cloud">What cloud provider do you use?</label>
+    <form
+      action="https://t5pdexr658.execute-api.eu-west-1.amazonaws.com/serverless_lambda_stage/generate"
+      method="get"
+    >
+      <div>
+        <label for="cloud">What cloud provider do you use?</label>
 
-      <select name="cloud" id="cloud">
-        <option value="aws">AWS</option>
-        <option value="azure">Azure</option>
-        <option value="gcp">GCP</option>
-      </select>
+        <select name="cloud" id="cloud">
+          <option value="aws">AWS</option>
+          <option value="azure">Azure</option>
+          <option value="gcp">GCP</option>
+        </select>
+      </div>
+      <div>
+        <label for="hosting">What hosting do you need?</label>
 
-      <br /><br />
-      <label for="hosting">What hosting do you need?</label>
+        <select name="hosting" id="hosting">
+          <option value="vm">Generic VM</option>
+          <option value="lambda">Serverless</option>
+          <option value="docker">Generic Docker</option>
+          <option value="static">Static Website Hosting</option>
+        </select>
+      </div>
+      <div id="vm_div">
+        <label for="vm">What type of VM do you need?</label>
 
-      <select name="hosting" id="hosting">
-        <option value="vm">Generic VM</option>
-        <option value="lambda">Serverless</option>
-        <option value="docker">Generic Docker</option>
-        <option value="static">Static Website Hosting</option>
-      </select>
+        <select name="vm" id="vm">
+          <option value="ubuntu">Ubuntu</option>
+          <option value="redhat">Redhat</option>
+          <option value="centos">CentOS</option>
+        </select>
+      </div>
+      <div id="runtime_div">
+        <label for="runtime">What runtime do you need?</label>
 
-      <br /><br />
+        <select name="runtime" id="runtime">
+          <option value="volvo">Python 3.9</option>
+          <option value="saab">Node 16.x</option>
+          <option value="mercedes">Ruby 2.7</option>
+          <option value="mercedes">Java 11</option>
+          <option value="mercedes">Go 1.x</option>
+          <option value="mercedes">.NET Core 3.1</option>
+          <option value="mercedes">.NET 6</option>
+        </select>
+      </div>
+      <div id="db_div">
+        <label for="db">Which database do you use?</label>
 
-      <label for="vm">What type of VM do you need?</label>
-
-      <select name="vm" id="m">
-        <option value="ubuntu">Ubuntu</option>
-        <option value="redhat">Redhat</option>
-        <option value="centos">CentOS</option>
-      </select>
-
-      <br /><br />
-
-      <label for="runtime">What runtime do you need?</label>
-
-      <select name="runtime" id="runtime">
-        <option value="volvo">Python 3.9</option>
-        <option value="saab">Node 16.x</option>
-        <option value="mercedes">Ruby 2.7</option>
-        <option value="mercedes">Java 11</option>
-        <option value="mercedes">Go 1.x</option>
-        <option value="mercedes">.NET Core 3.1</option>
-        <option value="mercedes">.NET 6</option>
-      </select>
-
-      <br /><br />
-
-      <label for="db">Which database do you use?</label>
-
-      <select name="db" id="db">
-        <option value="postgres">Postgres</option>
-        <option value="mongo">MongoDB</option>
-        <option value="none">No need for DB</option>
-      </select>
-
-      <br /><br />
-
-      <label for="static">Do you need to statically host front end?</label>
-      <input type="checkbox" id="static" name="static" value="yes" />
-
-      <br /><br />
-      <label for="static_data"
-        >Do you need to statically host anything else? (Media, data files,
-        etc)</label
-      >
-      <input type="checkbox" id="static_data" name="static_data" value="yes" />
-
-      <br /><br />
+        <select name="db" id="db">
+          <option value="postgres">Postgres</option>
+          <option value="mongo">MongoDB</option>
+          <option value="none">No need for DB</option>
+        </select>
+      </div>
+      <div>
+        <label for="static">Do you need to statically host front end?</label>
+        <input type="checkbox" id="static" name="static" value="yes" />
+      </div>
+      <div>
+        <label for="static_data"
+          >Do you need to statically host anything else? (Media, data files,
+          etc)</label
+        >
+        <input
+          type="checkbox"
+          id="static_data"
+          name="static_data"
+          value="yes"
+        />
+      </div>
       <input type="submit" value="Submit" />
     </form>
   </body>
