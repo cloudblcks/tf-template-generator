@@ -33,6 +33,15 @@ resource "aws_s3_bucket" "lambda_bucket" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket" "template_bucket" {
+  bucket = "cloudblocks-templates"
+}
+
+resource "aws_s3_bucket_acl" "template_bucket_acl" {
+  bucket = aws_s3_bucket.template_bucket.id
+  acl    = "public-read"
+}
+
 data "archive_file" "lambda_tf_generator" {
   type = "zip"
 
@@ -92,32 +101,36 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_user" "retool_lambda_invoker" {
-  name = "retool_lambda_invoker"
+resource "aws_iam_user" "github_action_s3_template_syncer" {
+  name = "github_action_s3_template_syncer"
 }
 
-resource "aws_iam_access_key" "retool_lambda_invoker" {
-  user = aws_iam_user.retool_lambda_invoker.name
+resource "aws_iam_access_key" "github_action_s3_template_syncer" {
+  user = aws_iam_user.github_action_s3_template_syncer.name
 }
 
-resource "aws_iam_user_policy" "retool_lambda_invoker_policy" {
-  name = "test"
-  user = aws_iam_user.retool_lambda_invoker.name
+resource "aws_iam_user_policy" "github_action_s3_template_syncer_policy" {
+  name = "github_action_s3_template_syncer_policy"
+  user = aws_iam_user.github_action_s3_template_syncer.name
 
   policy = <<EOF
 {
-	  "Version": "2012-10-17",
-	  "Statement": [
-		  {
-			  "Effect": "Allow",
-			  "Action": [
-				  "lambda:ListFunctions",
-				  "lambda:InvokeFunction"
-			  ],
-			  "Resource": "*"
-		  }
-	  ]
-  }
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObjectVersion",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
 EOF
 }
 
