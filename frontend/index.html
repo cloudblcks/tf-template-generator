@@ -1,115 +1,137 @@
 <html>
-  <head>
+<head>
     <script>
-      window.onload = function () {
-        document
-          .getElementById("hosting")
-          .addEventListener("change", updateForm);
-        updateForm();
-      };
+        window.onload = function () {
+            document
+                .getElementById("hosting")
+                .addEventListener("change", updateForm);
+            updateForm();
+        };
 
-      function updateForm() {
-        var hosting = document.getElementById("hosting").value;
-        var vm_div = document.getElementById("vm_div");
-        var runtime_div = document.getElementById("runtime_div");
-        var db_div = document.getElementById("db_div");
-        switch (hosting) {
-          case "vm":
-            runtime_div.style.display = "none";
-            vm_div.style.display = "block";
-            db_div.style.display = "block";
-            break;
-          case "lambda":
-            runtime_div.style.display = "block";
-            vm_div.style.display = "none";
-            db_div.style.display = "block";
-            break;
-          case "static":
-            runtime_div.style.display = "none";
-            vm_div.style.display = "none";
-            db_div.style.display = "none";
-          case "docker":
-            runtime_div.style.display = "none";
-            vm_div.style.display = "none";
-            db_div.style.display = "block";
-            break;
+        function updateForm() {
+            var hosting = document.getElementById("hosting").value;
+            var vm_div = document.getElementById("vm_div");
+            var runtime_div = document.getElementById("runtime_div");
+            var db_div = document.getElementById("db_div");
+            switch (hosting) {
+                case "vm":
+                    runtime_div.style.display = "none";
+                    vm_div.style.display = "block";
+                    db_div.style.display = "block";
+                    break;
+                case "lambda":
+                    runtime_div.style.display = "block";
+                    vm_div.style.display = "none";
+                    db_div.style.display = "block";
+                    break;
+                case "static":
+                    runtime_div.style.display = "none";
+                    vm_div.style.display = "none";
+                    db_div.style.display = "none";
+                case "docker":
+                    runtime_div.style.display = "none";
+                    vm_div.style.display = "none";
+                    db_div.style.display = "block";
+                    break;
+            }
         }
-      }
     </script>
-  </head>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
 
-  <body>
-    <form
-      action="https://t5pdexr658.execute-api.eu-west-1.amazonaws.com/serverless_lambda_stage/generate"
-      method="get"
-    >
-      <div>
-        <label for="cloud">What cloud provider do you use?</label>
+<body>
+<form
+        action="https://t5pdexr658.execute-api.eu-west-1.amazonaws.com/serverless_lambda_stage/generate"
+        method="get"
+>
+    <div class="form-group row">
+        <label for="cloud" class="col-form-label col-lg-3">What cloud provider do you use?</label>
 
-        <select name="cloud" id="cloud">
-          <option value="aws">AWS</option>
-          <option value="azure">Azure</option>
-          <option value="gcp">GCP</option>
-        </select>
-      </div>
-      <div>
-        <label for="hosting">What hosting do you need?</label>
+        <div class="col-lg-4">
+            <select name="cloud" id="cloud" class="form-control">
+                <option value="aws">Amazon Web Services</option>
+                <option value="azure">Azure</option>
+                <option value="gcp">Google Cloud Platform</option>
+            </select>
+        </div>
+    </div>
 
-        <select name="hosting" id="hosting">
-          <option value="vm">Generic VM</option>
-          <option value="lambda">Serverless</option>
-          <option value="docker">Generic Docker</option>
-          <option value="static">Static Website Hosting</option>
-        </select>
-      </div>
-      <div id="vm_div">
-        <label for="vm">What type of VM do you need?</label>
+    <div class="form-group row">
+        <label for="hosting" class="col-form-label col-lg-3">What hosting do you need?</label>
 
-        <select name="vm" id="vm">
-          <option value="ubuntu">Ubuntu</option>
-          <option value="redhat">Redhat</option>
-          <option value="centos">CentOS</option>
-        </select>
-      </div>
-      <div id="runtime_div">
-        <label for="runtime">What runtime do you need?</label>
+        <div class="col-lg-4">
+            <select name="hosting" id="hosting" class="form-control">
+                <option value="vm">Generic VM</option>
+                <option value="lambda">Serverless</option>
+                <option value="docker">Generic Docker</option>
+                <option value="static">Static Website Hosting</option>
+            </select>
+        </div>
+    </div>
 
-        <select name="runtime" id="runtime">
-          <option value="volvo">Python 3.9</option>
-          <option value="saab">Node 16.x</option>
-          <option value="mercedes">Ruby 2.7</option>
-          <option value="mercedes">Java 11</option>
-          <option value="mercedes">Go 1.x</option>
-          <option value="mercedes">.NET Core 3.1</option>
-          <option value="mercedes">.NET 6</option>
-        </select>
-      </div>
-      <div id="db_div">
-        <label for="db">Which database do you use?</label>
+    <div id="vm_div" class="form-group row">
+        <label for="vm" class="col-form-label col-lg-3">What type of VM do you need?</label>
 
-        <select name="db" id="db">
-          <option value="postgres">Postgres</option>
-          <option value="mongo">MongoDB</option>
-          <option value="none">No need for DB</option>
-        </select>
-      </div>
-      <div>
-        <label for="static">Do you need to statically host front end?</label>
-        <input type="checkbox" id="static" name="static" value="yes" />
-      </div>
-      <div>
-        <label for="static_data"
-          >Do you need to statically host anything else? (Media, data files,
-          etc)</label
-        >
+        <div class="col-lg-4">
+            <select name="vm" id="vm" class="form-control">
+                <option value="ubuntu">Ubuntu</option>
+                <option value="redhat">Redhat</option>
+                <option value="centos">CentOS</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="runtime_div" class="form-group row">
+        <label for="runtime" class="col-form-label col-lg-3">What runtime do you need?</label>
+
+        <div class="col-lg-4">
+            <select name="runtime" id="runtime" class="form-control">
+                <option value="python3.9">Python 3.9</option>
+                <option value="node16.x">Node 16.x</option>
+                <option value="ruby2.7">Ruby 2.7</option>
+                <option value="java11">Java 11</option>
+                <option value="go1.x">Go 1.x</option>
+                <option value="netcore3.1">.NET Core 3.1</option>
+                <option value="net6">.NET 6</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="db_div" class="form-group row">
+        <label for="db" class="col-form-label col-lg-3">Which database do you use?</label>
+
+        <div class="col-lg-4">
+            <select name="db" id="db" class="form-control">
+                <option value="postgres">Postgres</option>
+                <option value="mongo">MongoDB</option>
+                <option value="none">No need for DB</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-check">
+        <input type="checkbox" id="static" name="static" class="form-check-input" value="yes"/>
+        <label for="static" class="form-check-label">Do you need to statically host front end?</label>
+    </div>
+
+    <div class="form-check">
         <input
-          type="checkbox"
-          id="static_data"
-          name="static_data"
-          value="yes"
+                type="checkbox"
+                id="static_data"
+                name="static_data"
+                class="form-check-input"
+                value="yes"
         />
-      </div>
-      <input type="submit" value="Submit" />
-    </form>
-  </body>
+        <label for="static_data" class="form-check-label">
+            Do you need to statically host anything else? (Media, data files, etc)
+        </label>
+    </div>
+
+    <input type="submit" value="Submit" class="btn btn-primary"/>
+</form>
+</body>
 </html>
