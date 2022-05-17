@@ -1,0 +1,25 @@
+terraform {
+    required_providers {
+    {% for provider in required_providers %}
+        {{ provider.name }} = {
+            source = {{ provider.source }}
+            version = {{ provider.version }}
+        }
+    }
+}
+
+{% for provider in cloud_providers %}
+    provider "{{ provider.name }}" {
+        {% for attribute in provider.attributes %}
+            {{ attribute.name }} = {{ attribute.value }}
+        {% endfor %}
+    }
+{% endfor %}
+
+{% for block in blocks %}
+    {{ block.block_type }} {% for label in block.labels %} "{{ label }}" {% endfor %} {
+        {% for attribute in block.attributes %}
+            {{ attribute.name }} = {{ attribute.value }}
+        {% endfor %}
+    }
+{% endfor %}
