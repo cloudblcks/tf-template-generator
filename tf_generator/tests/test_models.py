@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from models import TerraformAttribute
+from tf_generator.models import TerraformAttribute
 
 TEST_DATA_ATTRIBUTES = [
     ("foo", "bar", {"name": "foo", "value": "bar"}),
@@ -16,9 +16,11 @@ def test_tf_attribute_json_serialisation(name, value, expected):
     assert attribute.to_dict() == expected
 
 
-def test_resource_json_serialisation(name: str,
-                                     block_type: str,
-                                     labels: List[str],
-                                     attributes: list[TerraformAttribute],
-                                     expected):
+def test_resource_json_serialisation(
+    name: str,
+    block_type: str,
+    labels: List[str],
+    attributes: List[TerraformAttribute],
+    expected,
+):
     pass
