@@ -3,9 +3,10 @@ from typing import List
 
 import pytest
 
-from tf_generator.models import TerraformAttribute, Resource
 
 # fmt: off
+from tf_generator.models.tf_blocks import TerraformAttribute, Resource
+
 TEST_DATA_ATTRIBUTES = [
     ("foo", "bar", {"name": "foo", "value": "bar"}),
     ("foo", 1, {"name": "foo", "value": 1}),
