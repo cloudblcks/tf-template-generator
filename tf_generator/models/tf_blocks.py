@@ -13,15 +13,6 @@ class TerraformAttribute(JsonSerialisable):
     def from_dict(cls, d):
         return cls(name=d["name"], value=d["value"])
 
-    def to_dict(self):
-        value = self.value
-        if isinstance(self.value, TerraformAttribute):
-            value = self.value.to_dict()
-        return {
-            "name": self.name,
-            "value": value,
-        }
-
 
 @dataclass
 class Provider(JsonSerialisable):
@@ -36,13 +27,6 @@ class Provider(JsonSerialisable):
             version=d["version"],
             attributes=[a.from_dict() for a in d["attributes"]],
         )
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "version": self.version,
-            "attributes": [a.to_dict() for a in self.attributes],
-        }
 
 
 @dataclass
@@ -60,11 +44,3 @@ class Resource(JsonSerialisable):
             labels=d["labels"],
             attributes=[a.from_dict() for a in d["attributes"]],
         )
-
-    def to_dict(self):
-        return {
-            "identifier": self.identifier,
-            "block_type": self.block_type,
-            "labels": self.labels,
-            "attributes": [a.to_dict() for a in self.attributes],
-        }
