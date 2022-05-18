@@ -29,9 +29,12 @@ class TerraformAttribute(JsonSerialisable):
         return cls(name=d["name"], value=d["value"])
 
     def to_dict(self):
+        value = self.value
+        if isinstance(self.value, TerraformAttribute):
+            value = self.value.to_dict()
         return {
             "name": self.name,
-            "value": self.value,
+            "value": value,
         }
 
 
@@ -59,7 +62,7 @@ class Provider(JsonSerialisable):
 
 @dataclass
 class Resource(JsonSerialisable):
-    name: str
+    identifier: str
     block_type: str
     labels: List[str]  # TODO: Decide if labels should be flat or linked tree
     attributes: List[TerraformAttribute]
@@ -67,7 +70,7 @@ class Resource(JsonSerialisable):
     @classmethod
     def from_dict(cls, d):
         return cls(
-            name=d["name"],
+            identifier=d["identifier"],
             block_type=d["block_type"],
             labels=d["labels"],
             attributes=[a.from_dict() for a in d["attributes"]],
@@ -75,7 +78,7 @@ class Resource(JsonSerialisable):
 
     def to_dict(self):
         return {
-            "name": self.name,
+            "identifier": self.identifier,
             "block_type": self.block_type,
             "labels": self.labels,
             "attributes": [a.to_dict() for a in self.attributes],
