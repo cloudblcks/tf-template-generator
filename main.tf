@@ -13,6 +13,13 @@ terraform {
 	  version = "~> 2.2.0"
 	}
   }
+  cloud {
+    organization = "cloudblocks"
+
+    workspaces {
+      name = "template-generator"
+    }
+  }
 
   required_version = "~> 1.0"
 }
