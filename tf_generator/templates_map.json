@@ -1,0 +1,49 @@
+{
+  "provider": {
+    "aws": "s3:///"
+  },
+  "compute": {
+    "aws": {
+      "docker": {
+        "service_name": "Amazon ECS",
+        "uri": "s3://cloudblocks-templates/compute/aws-docker/aws-ecs.tf",
+        "outputs_uri": "s3://cloudblocks-templates/compute/aws-docker/outputs.tf",
+        "variables_uri": "s3://cloudblocks-templates/compute/aws-docker/variables.tf"
+      },
+      "vm": {
+        "service_name": "Amazon EC2",
+        "uri": "s3://cloudblocks-templates/compute/aws-ec2/aws-ec2.tf",
+        "outputs_uri": "s3://cloudblocks-templates/compute/aws-ec2/outputs.tf",
+        "variables_uri": "s3://cloudblocks-templates/compute/aws-ec2/variables.tf"
+      }
+    }
+  },
+  "serverless": {
+    "lambda": {
+      "service_name": "AWS Lambda",
+      "uri": "s3://cloudblocks-templates/serverless/aws-lambda/aws-lambda.tf",
+      "outputs_uri": "s3://cloudblocks-templates/serverless/aws-lambda/outputs.tf",
+      "variables_uri": "s3://cloudblocks-templates/serverless/aws-lambda/variables.tf"
+    }
+  },
+  "database": {
+    "aws": {
+      "postgresql": {
+        "service_name": "AWS RDS PostgreSQL",
+        "uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/aws-rds-postgresql.tf",
+        "outputs_uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/outputs.tf",
+        "variables_uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/variables.tf"
+      }
+    }
+  },
+  "storage": {
+    "aws": {
+      "S3": {
+        "service_name": "Amazon S3",
+        "uri": "s3://cloudblocks-templates/storage/aws-s3.tf",
+        "outputs_uri": null,
+        "variables_uri": null
+      }
+    }
+  }
+}
