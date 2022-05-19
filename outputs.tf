@@ -17,15 +17,3 @@ output "base_url" {
 
   value = aws_apigatewayv2_stage.lambda.invoke_url
 }
-
-output "github_s3_syncer_access_key" {
-  description = "Github S3 syncer user access key"
-  sensitive = true
-  value = aws_iam_access_key.github_action_s3_template_syncer.id
-}
-
-output "github_s3_syncer_access_secret" {
-  description = "Github S3 syncer user access secret"
-  sensitive = true
-  value = aws_iam_access_key.github_action_s3_template_syncer.secret
-}
