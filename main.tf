@@ -1,17 +1,17 @@
 terraform {
   required_providers {
-	aws = {
-	  source  = "hashicorp/aws"
-	  version = "~> 4.0.0"
-	}
-	random = {
-	  source  = "hashicorp/random"
-	  version = "~> 3.1.0"
-	}
-	archive = {
-	  source  = "hashicorp/archive"
-	  version = "~> 2.2.0"
-	}
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.2.0"
+    }
   }
   cloud {
     organization = "cloudblocks"
@@ -52,7 +52,7 @@ resource "aws_s3_bucket_acl" "template_bucket_acl" {
 data "archive_file" "lambda_tf_generator" {
   type = "zip"
 
-  source_dir  = "${path.module}/tf-generator"
+  source_dir  = "${path.module}/tf_generator"
   output_path = "${path.module}/tf-generator.zip"
 }
 
@@ -71,8 +71,8 @@ resource "aws_lambda_function" "tf-generator" {
   s3_bucket = aws_s3_bucket.lambda_bucket.id
   s3_key    = aws_s3_object.lambda_tf_generator.key
 
-  runtime = "python3.9"
-  handler = "lambda.lambda_handler"
+  runtime       = "python3.9"
+  handler       = "lambda.lambda_handler"
   architectures = ["arm64"]
 
   source_code_hash = data.archive_file.lambda_tf_generator.output_base64sha256
@@ -90,16 +90,17 @@ resource "aws_iam_role" "lambda_exec" {
   name = "serverless_lambda"
 
   assume_role_policy = jsonencode({
-	Version = "2012-10-17"
-	Statement = [{
-	  Action = "sts:AssumeRole"
-	  Effect = "Allow"
-	  Sid    = ""
-	  Principal = {
-		Service = "lambda.amazonaws.com"
-	  }
-	  }
-	]
+    Version   = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
   })
 }
 
@@ -141,6 +142,38 @@ resource "aws_iam_user_policy" "github_action_s3_template_syncer_policy" {
 EOF
 }
 
+resource "aws_iam_user" "lambda_template_generator" {
+  name = "lambda_template_generator"
+}
+
+resource "aws_iam_access_key" "lambda_template_generator" {
+  user = aws_iam_user.lambda_template_generator.name
+}
+
+resource "aws_iam_user_policy" "lambda_template_generator_policy" {
+  name = "lambda_template_generator_policy"
+  user = aws_iam_user.lambda_template_generator.name
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+            ],
+            "Resource": [
+                "arn:aws:s3:::cloudblocks-templates/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
 resource "aws_apigatewayv2_api" "lambda" {
   name          = "serverless_lambda_gw"
   protocol_type = "HTTP"
@@ -166,7 +199,7 @@ resource "aws_apigatewayv2_stage" "lambda" {
       status                  = "$context.status"
       responseLength          = "$context.responseLength"
       integrationErrorMessage = "$context.integrationErrorMessage"
-      }
+    }
     )
   }
 }
