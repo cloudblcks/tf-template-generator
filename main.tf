@@ -163,7 +163,7 @@ resource "aws_iam_user_policy" "lambda_template_generator_policy" {
             "Effect": "Allow",
             "Action": [
                 "s3:GetObject",
-                "s3:ListBucket",
+                "s3:ListBucket"
             ],
             "Resource": [
                 "arn:aws:s3:::cloudblocks-templates/*"
