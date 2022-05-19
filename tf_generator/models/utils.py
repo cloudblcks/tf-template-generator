@@ -1,0 +1,20 @@
+import json
+from dataclasses import asdict, dataclass
+from typing import Dict
+
+
+@dataclass
+class JsonSerialisable:
+    @classmethod
+    def from_dict(cls, d: Dict):
+        raise NotImplementedError()
+
+    @classmethod
+    def from_json(cls, d: str):
+        return cls.from_dict(json.loads(d))
+
+    def to_dict(self) -> Dict:
+        return asdict(self)
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict())
