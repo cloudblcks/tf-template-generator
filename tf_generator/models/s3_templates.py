@@ -1,19 +1,43 @@
 from dataclasses import dataclass
+from enum import auto
+from strenum import LowercaseStrEnum
 from typing import Dict, Optional
 
 from tf_generator.models.utils import JsonSerialisable
 from tf_generator.tf_loader import S3TerraformLoader
 
 
+class ServiceProvider(LowercaseStrEnum):
+    AWS = auto()
+    GCP = auto()
+    AZURE = auto()
+    KUBERNETES = auto()
+    HEROKU = auto()
+
+
+class ServiceCategory(LowercaseStrEnum):
+    COMPUTE = auto()
+    SERVERLESS = auto()
+    DATABASE = auto()
+    STORAGE = auto()
+
+
 @dataclass
 class ProviderTemplate(JsonSerialisable):
-    name: str
+    name: ServiceProvider
     uri: str
     template: Optional[str] = None
 
     @classmethod
     def from_dict(cls, d: Dict):
         return cls(name=d.get("name"), uri=d.get("uri"), template=d.get("template"))
+
+    def to_dict(self) -> Dict:
+        d = {"name": str(self.name), "uri": self.uri}
+        if self.template:
+            d["template"] = self.template
+
+        return d
 
     def load(self) -> None:
         if self.template:
@@ -72,9 +96,9 @@ class ProviderServiceTemplates(JsonSerialisable):
         )
 
     def to_dict(self) -> Dict:
-        return {key: value.to_dict() for key, value in self.templates.items()}
+        return {str(key): value.to_dict() for key, value in self.templates.items()}
 
-    def get(self, service_key) -> ServiceTemplate:
+    def get(self, service_key: str) -> ServiceTemplate:
         if not self.templates.get(service_key):
             raise ValueError(f"No service template with key [{service_key}] found")
 
@@ -83,7 +107,7 @@ class ProviderServiceTemplates(JsonSerialisable):
 
 @dataclass
 class ServiceCategoryProviders(JsonSerialisable):
-    services: Dict[str, ProviderServiceTemplates]
+    services: Dict[ServiceProvider, ProviderServiceTemplates]
 
     @classmethod
     def from_dict(cls, d: Dict):
@@ -95,19 +119,19 @@ class ServiceCategoryProviders(JsonSerialisable):
         )
 
     def to_dict(self) -> Dict:
-        return {key: value.to_dict() for key, value in self.services.items()}
+        return {str(key): value.to_dict() for key, value in self.services.items()}
 
-    def get(self, provider, service_key) -> ServiceTemplate:
-        if not self.services.get(service_key):
-            raise ValueError(f"No service with key [{service_key}] found")
+    def get(self, provider: ServiceProvider, service_key: str) -> ServiceTemplate:
+        if not self.services.get(provider):
+            raise ValueError(f"No service with key [{provider}] found")
 
         return self.services.get(provider).get(service_key)
 
 
 @dataclass
 class ServiceCategories(JsonSerialisable):
-    providers: Dict[str, ProviderTemplate]
-    provider_services: Dict[str, ServiceCategoryProviders]
+    providers: Dict[ServiceProvider, ProviderTemplate]
+    provider_services: Dict[ServiceCategory, ServiceCategoryProviders]
 
     @classmethod
     def from_dict(cls, d: Dict):
@@ -126,12 +150,17 @@ class ServiceCategories(JsonSerialisable):
     def to_dict(self) -> Dict:
         return {
             "providers": {
-                key: value.to_dict() for key, value in self.providers.items()
+                str(key): value.to_dict() for key, value in self.providers.items()
             },
-            **{key: value.to_dict() for key, value in self.provider_services.items()},
+            **{
+                str(key): value.to_dict()
+                for key, value in self.provider_services.items()
+            },
         }
 
-    def get(self, category: str, provider: str, name: str) -> ServiceTemplate:
+    def get(
+        self, category: ServiceCategory, provider: ServiceProvider, name: str
+    ) -> ServiceTemplate:
         if not self.provider_services.get(category):
             raise KeyError(f"No category named [{category}] found")
 
