@@ -2,6 +2,25 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from tf_generator.models.utils import JsonSerialisable
+from tf_generator.tf_loader import S3TerraformLoader
+
+
+@dataclass
+class ProviderTemplate(JsonSerialisable):
+    name: str
+    uri: str
+    template: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, d: Dict):
+        return cls(name=d.get("name"), uri=d.get("uri"), template=d.get("template"))
+
+    def load(self) -> None:
+        if self.template:
+            return
+
+        loader = S3TerraformLoader()
+        self.template = loader.get_file(self.uri)
 
 
 @dataclass
