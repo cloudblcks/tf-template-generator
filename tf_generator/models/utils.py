@@ -14,7 +14,7 @@ class JsonSerialisable:
         return cls.from_dict(json.loads(d))
 
     def to_dict(self) -> Dict:
-        return asdict(self)
+        return {key: value for key, value in asdict(self).items() if value}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
