@@ -7,6 +7,8 @@ from tf_generator.models.s3_templates import (
     ServiceTemplate,
     ProviderServiceTemplates,
     ServiceCategories,
+    ProviderTemplate,
+    ServiceCategoryProviders,
 )
 
 # fmt: off
@@ -43,31 +45,37 @@ TEST_DATA_PROVIDER_SERVICE_TEMPLATES_FROM_JSON = [
 ]
 
 TEST_DATA_SERVICE_CATEGORIES_TO_DICT = [
-    ({"aws": {"foo": "bar"}},
-     {"compute": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})},
-     {"providers": {"aws": {"foo": "bar"}},
-      "compute": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}),
-    ({"aws": {"foo": "bar"}, "gcp": {"lorem": "ipsum"}},
-     {"compute": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")}),
-      "storage": ProviderServiceTemplates({"ec2": ServiceTemplate("ec2", "s3://foo", "s3://bar", "s3://derp")})},
-     {"providers": {"aws": {"foo": "bar"}, "gcp": {"lorem": "ipsum"}},
-      "compute": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}},
-      "storage": {
-          "ec2": {"service_name": "ec2", "uri": "s3://foo", "outputs_uri": "s3://bar", "variables_uri": "s3://derp"}}}),
+    ({"aws": ProviderTemplate("foo", "bar")},
+     {"compute": ServiceCategoryProviders(
+         {"aws": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})})},
+     {"providers": {"aws": {"name": "foo", "uri": "bar"}},
+      "compute": {
+          "aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}}),
+    ({"aws": ProviderTemplate("foo", "bar"), "gcp": ProviderTemplate("lorem", "ipsum")},
+     {"compute": ServiceCategoryProviders(
+         {"aws": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})}),
+      "storage": ServiceCategoryProviders(
+          {"aws": ProviderServiceTemplates({"ec2": ServiceTemplate("ec2", "s3://foo", "s3://bar", "s3://derp")})})},
+     {"providers": {"aws": {"name": "foo", "uri": "bar"}, "gcp": {"name": "lorem", "uri": "ipsum"}},
+      "compute": {"aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}},
+      "storage": {"aws": {
+          "ec2": {"service_name": "ec2", "uri": "s3://foo", "outputs_uri": "s3://bar", "variables_uri": "s3://derp"}}}})
 ]
 
 TEST_DATA_SERVICE_CATEGORIES_FROM_JSON = [
-    ('''{"providers": {"aws": {"foo": "bar"}},
-    "compute": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}''',
-     ServiceCategories({"aws": {"foo": "bar"}},
-                       {"compute": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})})),
-    ('''{"providers": {"aws": {"foo": "bar"}, "gcp": {"lorem": "ipsum"}},
-    "compute": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}},
-    "storage": {"ec2": {"service_name": "ec2", "uri": "s3://foo", "outputs_uri": "s3://bar", "variables_uri": "s3://derp"}}}''',
-     ServiceCategories({"aws": {"foo": "bar"}, "gcp": {"lorem": "ipsum"}},
-                       {"compute": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")}),
-                        "storage": ProviderServiceTemplates(
-                            {"ec2": ServiceTemplate("ec2", "s3://foo", "s3://bar", "s3://derp")})}))
+    ('''{"providers": {"aws": {"name": "foo", "uri": "bar"}},
+    "compute": {"aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}}''',
+     ServiceCategories({"aws": ProviderTemplate("foo", "bar")},
+                       {"compute": ServiceCategoryProviders(
+                           {"aws": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})})})),
+    ('''{"providers": {"aws": {"name": "foo", "uri": "bar"}, "gcp": {"name": "lorem", "uri": "ipsum"}},
+    "compute": {"aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}},
+    "storage": {"gcp": {"ec2": {"service_name": "ec2", "uri": "s3://foo", "outputs_uri": "s3://bar", "variables_uri": "s3://derp"}}}}''',
+     ServiceCategories({"aws": ProviderTemplate("foo", "bar"), "gcp": ProviderTemplate("lorem", "ipsum")}, {
+         "compute": ServiceCategoryProviders(
+             {"aws": ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})}),
+         "storage": ServiceCategoryProviders(
+             {"gcp": ProviderServiceTemplates({"ec2": ServiceTemplate("ec2", "s3://foo", "s3://bar", "s3://derp")})})}))
 ]
 
 
@@ -112,8 +120,8 @@ def test_provider_service_template_json_serialisation(s, expected):
     "providers,provider_services,expected", TEST_DATA_SERVICE_CATEGORIES_TO_DICT
 )
 def test_service_categories_json_deserialisation(
-    providers: Dict[str, dict],
-    provider_services: Dict[str, ProviderServiceTemplates],
+    providers: Dict[str, ProviderTemplate],
+    provider_services: Dict[str, ServiceCategoryProviders],
     expected: Dict,
 ):
     service_categories = ServiceCategories(providers, provider_services)
