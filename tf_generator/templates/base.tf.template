@@ -1,25 +1,23 @@
-terraform {
-    required_providers {
-    {% for provider in required_providers %}
-        {{ provider.name }} = {
-            source = {{ provider.source }}
-            version = {{ provider.version }}
-        }
-    }
-}
+{{ providers }}
 
-{% for provider in cloud_providers %}
-    provider "{{ provider.name }}" {
-        {% for attribute in provider.attributes %}
-            {{ attribute.name }} = {{ attribute.value }}
-        {% endfor %}
-    }
+{% for section in ["variables", "resources", "outputs"] %}
+###################################
+# Auto-generated section: {{ section }}
+###################################
+
+{% for service in services %}
+######
+# Auto-generated {{ section }} configuration for: {{ service.service_name }}
+######
+{% if section == "variables" %}
+{{ service.variables }}
+{% endif %}
+{% if section == "resources" %}
+{{ service.template }}
+{% endif %}
+{% if section == "outputs" %}
+{{ service.outputs }}
+{% endif %}
 {% endfor %}
 
-{% for block in blocks %}
-    {{ block.block_type }} {% for label in block.labels %} "{{ label }}" {% endfor %} {
-        {% for attribute in block.attributes %}
-            {{ attribute.name }} = {{ attribute.value }}
-        {% endfor %}
-    }
 {% endfor %}
