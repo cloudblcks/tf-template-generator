@@ -1,6 +1,9 @@
 {
-  "provider": {
-    "aws": "s3:///"
+  "providers": {
+    "aws": {
+      "name": "Amazon Web Services",
+      "uri": "s3:///"
+    }
   },
   "compute": {
     "aws": {
@@ -19,11 +22,13 @@
     }
   },
   "serverless": {
-    "lambda": {
-      "service_name": "AWS Lambda",
-      "uri": "s3://cloudblocks-templates/serverless/aws-lambda/aws-lambda.tf",
-      "outputs_uri": "s3://cloudblocks-templates/serverless/aws-lambda/outputs.tf",
-      "variables_uri": "s3://cloudblocks-templates/serverless/aws-lambda/variables.tf"
+    "aws": {
+      "lambda": {
+        "service_name": "AWS Lambda",
+        "uri": "s3://cloudblocks-templates/serverless/aws-lambda/aws-lambda.tf",
+        "outputs_uri": "s3://cloudblocks-templates/serverless/aws-lambda/outputs.tf",
+        "variables_uri": "s3://cloudblocks-templates/serverless/aws-lambda/variables.tf"
+      }
     }
   },
   "database": {
@@ -38,7 +43,7 @@
   },
   "storage": {
     "aws": {
-      "S3": {
+      "s3": {
         "service_name": "Amazon S3",
         "uri": "s3://cloudblocks-templates/storage/aws-s3.tf",
         "outputs_uri": null,

@@ -20,6 +20,7 @@ class ServiceCategory(LowercaseStrEnum):
     SERVERLESS = auto()
     DATABASE = auto()
     STORAGE = auto()
+    WEBSITE_HOST = auto()
 
 
 @dataclass
