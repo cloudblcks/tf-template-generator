@@ -2,7 +2,7 @@
   "providers": {
     "aws": {
       "name": "Amazon Web Services",
-      "uri": "s3:///"
+      "uri": "s3://cloudblocks-templates/aws.tf"
     }
   },
   "compute": {
@@ -48,6 +48,16 @@
         "uri": "s3://cloudblocks-templates/storage/aws-s3.tf",
         "outputs_uri": null,
         "variables_uri": null
+      }
+    }
+  },
+  "website_host": {
+    "aws": {
+      "static": {
+        "service_name": "Static S3 + Cloudfront",
+        "uri": "s3://cloudblocks-templates/static/s3/static_website.tf",
+        "outputs_uri": null,
+        "variables_uri": "s3://cloudblocks-templates/static/s3/variables.tf"
       }
     }
   }
