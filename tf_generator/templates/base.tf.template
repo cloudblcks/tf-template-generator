@@ -1,3 +1,6 @@
+##########################################
+# Auto-generated section: providers import
+##########################################
 {{ providers }}
 
 {% for section in ["variables", "resources", "outputs"] %}
@@ -9,13 +12,13 @@
 ######
 # Auto-generated {{ section }} configuration for: {{ service.service_name }}
 ######
-{% if section == "variables" %}
+{% if section == "variables" and service.variables %}
 {{ service.variables }}
 {% endif %}
-{% if section == "resources" %}
+{% if section == "resources" and service.template %}
 {{ service.template }}
 {% endif %}
-{% if section == "outputs" %}
+{% if section == "outputs" and service.outputs %}
 {{ service.outputs }}
 {% endif %}
 {% endfor %}
