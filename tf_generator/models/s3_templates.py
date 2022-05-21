@@ -39,11 +39,12 @@ class ProviderTemplate(JsonSerialisable):
 
         return d
 
-    def load(self) -> None:
+    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
         if self.template:
             return
 
-        loader = S3TerraformLoader()
+        if not loader:
+            loader = S3TerraformLoader()
         self.template = loader.get_file(self.uri)
 
 
@@ -69,11 +70,12 @@ class ServiceTemplate(JsonSerialisable):
             variables=d.get("variables"),
         )
 
-    def load(self) -> None:
+    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
         if self.template:
             return
 
-        loader = S3TerraformLoader()
+        if not loader:
+            loader = S3TerraformLoader()
         self.template = loader.get_file(self.uri)
 
         if self.outputs_uri:
@@ -158,8 +160,21 @@ class ServiceCategories(JsonSerialisable):
             },
         }
 
+    def load_all(self):
+        loader = S3TerraformLoader()
+
+        for provider in self.providers.values():
+            provider.load(loader)
+        for service_type in self.provider_services.values():
+            for service in service_type.services.values():
+                for template in service.templates.values():
+                    template.load(loader)
+
     def get(
-        self, category: ServiceCategory, provider: ServiceProvider, name: str
+        self,
+        category: ServiceCategory,
+        provider: ServiceProvider,
+        name: str,
     ) -> ServiceTemplate:
         if not self.provider_services.get(category):
             raise KeyError(f"No category named [{category}] found")
