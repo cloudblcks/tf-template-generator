@@ -16,3 +16,12 @@ repos:
     rev: 5.10.1  # Use the sha / tag you want to point at
     hooks:
     -   id: isort
+- repo: https://github.com/antonbabenko/pre-commit-terraform
+  rev: 'v1.71.0' # Get the latest from: https://github.com/antonbabenko/pre-commit-terraform/releases
+  hooks:
+    - id: terraform_fmt
+    - id: terraform_validate
+    - id: terraform_checkov
+    - id: terraform_tflint
+    # - id: terraform_tfsec
+    - id: terrascan
