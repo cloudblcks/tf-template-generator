@@ -4,13 +4,13 @@ from typing import Dict
 import pytest
 
 from tf_generator.models.s3_templates import (
-    ServiceTemplate,
     ProviderServiceTemplates,
-    ServiceCategories,
     ProviderTemplate,
+    ServiceCategories,
+    ServiceCategory,
     ServiceCategoryProviders,
     ServiceProvider,
-    ServiceCategory,
+    ServiceTemplate,
 )
 
 # fmt: off

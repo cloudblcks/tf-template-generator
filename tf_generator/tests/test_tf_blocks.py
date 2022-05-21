@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from tf_generator.models.tf_blocks import TerraformAttribute, Resource
+from tf_generator.models.tf_blocks import Resource, TerraformAttribute
 
 # fmt: off
 
