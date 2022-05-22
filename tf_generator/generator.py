@@ -3,13 +3,13 @@ from typing import Dict, Optional
 
 from jinja2 import Template
 
-from tf_generator.models.s3_templates import (
+from models.s3_templates import (
     ProviderTemplate,
     ServiceCategories,
     ServiceCategory,
     ServiceTemplate,
 )
-from tf_generator.tf_loader import S3TerraformLoader
+from tf_loader import S3TerraformLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 

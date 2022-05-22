@@ -3,7 +3,7 @@ from typing import Dict
 
 import pytest
 
-from tf_generator.models.s3_templates import (
+from models.s3_templates import (
     ProviderServiceTemplates,
     ProviderTemplate,
     ServiceCategories,

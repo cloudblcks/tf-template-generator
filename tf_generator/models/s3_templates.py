@@ -4,8 +4,8 @@ from typing import Dict, Optional, Union
 
 from strenum import LowercaseStrEnum
 
-from tf_generator.models.utils import JsonSerialisable
-from tf_generator.tf_loader import S3TerraformLoader
+from models.utils import JsonSerialisable
+from tf_loader import S3TerraformLoader
 
 
 class ServiceProvider(LowercaseStrEnum):

@@ -4,8 +4,8 @@ import os
 
 from dotenv import load_dotenv
 
-from tf_generator.generator import TerraformGenerator
-from tf_generator.models.s3_templates import ServiceProvider
+from generator import TerraformGenerator
+from models.s3_templates import ServiceProvider
 
 load_dotenv()
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Union
 
-from tf_generator.models.utils import JsonSerialisable
+from models.utils import JsonSerialisable
 
 
 @dataclass
