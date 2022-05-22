@@ -1,8 +1,8 @@
 FROM public.ecr.aws/lambda/python:3.9
 
 # Copy function code
-COPY *.py ${LAMBDA_TASK_ROOT}
-COPY templates_map.json ${LAMBDA_TASK_ROOT}
+COPY . ${LAMBDA_TASK_ROOT}
+# COPY templates_map.json ${LAMBDA_TASK_ROOT}
 
 # Install the function's dependencies using file requirements.txt
 # from your project folder.
