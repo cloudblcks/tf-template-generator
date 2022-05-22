@@ -33,7 +33,7 @@
   },
   "database": {
     "aws": {
-      "postgresql": {
+      "postgres": {
         "service_name": "AWS RDS PostgreSQL",
         "uri": "database/aws-rds/aws-rds-postgresql/aws-rds-postgresql.tf",
         "outputs_uri": "database/aws-rds/aws-rds-postgresql/outputs.tf",
