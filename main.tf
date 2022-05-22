@@ -28,17 +28,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "random_pet" "lambda_bucket_name" {
-  prefix = "tf-template-generator"
-  length = 4
-}
 
-resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = random_pet.lambda_bucket_name.id
-
-  # acl           = "private"
-  force_destroy = true
-}
 
 resource "aws_s3_bucket" "template_bucket" {
   bucket = "cloudblocks-templates"
@@ -49,33 +39,52 @@ resource "aws_s3_bucket_acl" "template_bucket_acl" {
   acl    = "public-read"
 }
 
-data "archive_file" "lambda_tf_generator" {
-  type = "zip"
 
-  source_dir  = "${path.module}/tf_generator"
-  output_path = "${path.module}/tf-generator.zip"
+data "aws_caller_identity" "current" {}
+
+locals {
+  prefix              = "git"
+  account_id          = data.aws_caller_identity.current.account_id
+  ecr_repository_name = "${local.prefix}-tf-generator-lambda-container"
+  ecr_image_tag       = "latest"
 }
 
-resource "aws_s3_object" "lambda_tf_generator" {
-  bucket = aws_s3_bucket.lambda_bucket.id
+resource "aws_ecr_repository" "repo" {
+  name = local.ecr_repository_name
+}
 
-  key    = "tf-generator.zip"
-  source = data.archive_file.lambda_tf_generator.output_path
+resource "null_resource" "ecr_image" {
+  triggers = {
+    python_file = sha1(join("", [for f in fileset("${path.module}", "tf_generator/**") : filesha1(f)]))
+  }
 
-  etag = filemd5(data.archive_file.lambda_tf_generator.output_path)
+  provisioner "local-exec" {
+    command = <<EOF
+           aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${local.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com
+           cd ${path.module}/tf_generator
+           docker build -t ${aws_ecr_repository.repo.repository_url}:${local.ecr_image_tag} .
+           docker push ${aws_ecr_repository.repo.repository_url}:${local.ecr_image_tag}
+       EOF
+  }
+}
+
+data "aws_ecr_image" "lambda_image" {
+  depends_on = [
+    null_resource.ecr_image
+  ]
+  repository_name = local.ecr_repository_name
+  image_tag       = local.ecr_image_tag
 }
 
 resource "aws_lambda_function" "tf-generator" {
+  depends_on = [
+    null_resource.ecr_image
+  ]
+  architectures = ["arm64"]
   function_name = "tf-generator"
 
-  s3_bucket = aws_s3_bucket.lambda_bucket.id
-  s3_key    = aws_s3_object.lambda_tf_generator.key
-
-  runtime       = "python3.9"
-  handler       = "lambda.lambda_handler"
-  architectures = ["arm64"]
-
-  source_code_hash = data.archive_file.lambda_tf_generator.output_base64sha256
+  package_type = "Image"
+  image_uri    = "${aws_ecr_repository.repo.repository_url}@${data.aws_ecr_image.lambda_image.id}"
 
   role = aws_iam_role.lambda_exec.arn
 }
