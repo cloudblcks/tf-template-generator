@@ -2,7 +2,7 @@ import io
 
 import boto3
 
-from tf_generator import config
+import config
 
 
 class S3TerraformLoader:
