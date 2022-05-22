@@ -111,6 +111,20 @@ resource "aws_iam_role" "lambda_exec" {
       }
     ]
   })
+  inline_policy {
+    name = "s3_templates_access"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "arn:aws:s3:::cloudblocks-templates/*"
+        },
+      ]
+    })
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
@@ -151,37 +165,7 @@ resource "aws_iam_user_policy" "github_action_s3_template_syncer_policy" {
 EOF
 }
 
-resource "aws_iam_user" "lambda_template_generator" {
-  name = "lambda_template_generator"
-}
 
-resource "aws_iam_access_key" "lambda_template_generator" {
-  user = aws_iam_user.lambda_template_generator.name
-}
-
-resource "aws_iam_user_policy" "lambda_template_generator_policy" {
-  name = "lambda_template_generator_policy"
-  user = aws_iam_user.lambda_template_generator.name
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::cloudblocks-templates/*"
-            ]
-        }
-    ]
-}
-EOF
-}
 
 resource "aws_apigatewayv2_api" "lambda" {
   name          = "serverless_lambda_gw"
