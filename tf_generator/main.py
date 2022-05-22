@@ -27,12 +27,11 @@ def get_parser():
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    print(args)
 
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
     generator = TerraformGenerator(template_map)
-    templates = generator.get_templates(
+    template = generator.generate_template(
         provider=args.provider,
         compute_service=args.compute,
         serverless_service=args.serverless,
@@ -41,7 +40,7 @@ def main():
         website_host_service=args.website,
     )
 
-    print(templates)
+    print(template)
 
 
 if __name__ == "__main__":

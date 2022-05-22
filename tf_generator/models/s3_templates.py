@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from enum import auto
+from typing import Dict, Optional, Union
+
 from strenum import LowercaseStrEnum
-from typing import Dict, Optional
 
 from tf_generator.models.utils import JsonSerialisable
 from tf_generator.tf_loader import S3TerraformLoader
@@ -31,7 +32,11 @@ class ProviderTemplate(JsonSerialisable):
 
     @classmethod
     def from_dict(cls, d: Dict):
-        return cls(name=d.get("name"), uri=d.get("uri"), template=d.get("template"))
+        return cls(
+            name=d.get("name"),
+            uri=d.get("uri"),
+            template=d.get("template"),
+        )
 
     def to_dict(self) -> Dict:
         d = {"name": str(self.name), "uri": self.uri}
@@ -60,7 +65,7 @@ class ServiceTemplate(JsonSerialisable):
     variables: Optional[str] = None
 
     @classmethod
-    def from_dict(cls, d: Dict):
+    def from_dict(cls, d: Dict[str, str]):
         return cls(
             service_name=d.get("service_name"),
             uri=d.get("uri"),
@@ -101,11 +106,16 @@ class ProviderServiceTemplates(JsonSerialisable):
     def to_dict(self) -> Dict:
         return {str(key): value.to_dict() for key, value in self.templates.items()}
 
-    def get(self, service_key: str) -> ServiceTemplate:
+    def get(
+        self, service_key: str, loader: Optional[S3TerraformLoader] = None
+    ) -> ServiceTemplate:
         if not self.templates.get(service_key):
             raise ValueError(f"No service template with key [{service_key}] found")
 
-        return self.templates.get(service_key)
+        template = self.templates.get(service_key)
+        if template:
+            template.load()
+        return template
 
 
 @dataclass
@@ -124,11 +134,16 @@ class ServiceCategoryProviders(JsonSerialisable):
     def to_dict(self) -> Dict:
         return {str(key): value.to_dict() for key, value in self.services.items()}
 
-    def get(self, provider: ServiceProvider, service_key: str) -> ServiceTemplate:
+    def get(
+        self,
+        provider: ServiceProvider,
+        service_key: str,
+        loader: Optional[S3TerraformLoader] = None,
+    ) -> ServiceTemplate:
         if not self.services.get(provider):
             raise ValueError(f"No service with key [{provider}] found")
 
-        return self.services.get(provider).get(service_key)
+        return self.services.get(provider).get(service_key, loader)
 
 
 @dataclass
@@ -176,8 +191,9 @@ class ServiceCategories(JsonSerialisable):
         category: ServiceCategory,
         provider: ServiceProvider,
         name: str,
+        loader: Optional[S3TerraformLoader] = None,
     ) -> ServiceTemplate:
         if not self.provider_services.get(category):
             raise KeyError(f"No category named [{category}] found")
 
-        return self.provider_services.get(category).get(provider, name)
+        return self.provider_services.get(category).get(provider, name, loader)

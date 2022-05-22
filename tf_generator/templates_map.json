@@ -2,22 +2,22 @@
   "providers": {
     "aws": {
       "name": "Amazon Web Services",
-      "uri": "s3://cloudblocks-templates/aws.tf"
+      "uri": "aws.tf"
     }
   },
   "compute": {
     "aws": {
       "docker": {
         "service_name": "Amazon ECS",
-        "uri": "s3://cloudblocks-templates/compute/aws-docker/aws-ecs.tf",
-        "outputs_uri": "s3://cloudblocks-templates/compute/aws-docker/outputs.tf",
-        "variables_uri": "s3://cloudblocks-templates/compute/aws-docker/variables.tf"
+        "uri": "compute/aws-docker/aws-ecs.tf",
+        "outputs_uri": "compute/aws-docker/outputs.tf",
+        "variables_uri": "compute/aws-docker/variables.tf"
       },
       "vm": {
         "service_name": "Amazon EC2",
-        "uri": "s3://cloudblocks-templates/compute/aws-ec2/aws-ec2.tf",
-        "outputs_uri": "s3://cloudblocks-templates/compute/aws-ec2/outputs.tf",
-        "variables_uri": "s3://cloudblocks-templates/compute/aws-ec2/variables.tf"
+        "uri": "compute/aws-ec2/aws-ec2.tf",
+        "outputs_uri": "compute/aws-ec2/outputs.tf",
+        "variables_uri": "compute/aws-ec2/variables.tf"
       }
     }
   },
@@ -25,9 +25,9 @@
     "aws": {
       "lambda": {
         "service_name": "AWS Lambda",
-        "uri": "s3://cloudblocks-templates/serverless/aws-lambda/aws-lambda.tf",
-        "outputs_uri": "s3://cloudblocks-templates/serverless/aws-lambda/outputs.tf",
-        "variables_uri": "s3://cloudblocks-templates/serverless/aws-lambda/variables.tf"
+        "uri": "serverless/aws-lambda/aws-lambda.tf",
+        "outputs_uri": "serverless/aws-lambda/outputs.tf",
+        "variables_uri": "serverless/aws-lambda/variables.tf"
       }
     }
   },
@@ -35,9 +35,9 @@
     "aws": {
       "postgresql": {
         "service_name": "AWS RDS PostgreSQL",
-        "uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/aws-rds-postgresql.tf",
-        "outputs_uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/outputs.tf",
-        "variables_uri": "s3://cloudblocks-templates/database/aws-rds/aws-rds-postgresql/variables.tf"
+        "uri": "database/aws-rds/aws-rds-postgresql/aws-rds-postgresql.tf",
+        "outputs_uri": "database/aws-rds/aws-rds-postgresql/outputs.tf",
+        "variables_uri": "database/aws-rds/aws-rds-postgresql/variables.tf"
       }
     }
   },
@@ -45,7 +45,7 @@
     "aws": {
       "s3": {
         "service_name": "Amazon S3",
-        "uri": "s3://cloudblocks-templates/storage/aws-s3.tf",
+        "uri": "storage/aws-s3.tf",
         "outputs_uri": null,
         "variables_uri": null
       }
@@ -55,9 +55,9 @@
     "aws": {
       "static": {
         "service_name": "Static S3 + Cloudfront",
-        "uri": "s3://cloudblocks-templates/static/s3/static_website.tf",
+        "uri": "static/s3/static_website.tf",
         "outputs_uri": null,
-        "variables_uri": "s3://cloudblocks-templates/static/s3/variables.tf"
+        "variables_uri": "static/s3/variables.tf"
       }
     }
   }

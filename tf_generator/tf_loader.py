@@ -17,10 +17,4 @@ class S3TerraformLoader:
 
     def get_file(self, uri):
         file = self.bucket.Object(uri)
-        return file.get()["Body"].read()
-
-
-if __name__ == "__main__":
-    l = S3TerraformLoader()
-    f = l.get_file("compute/aws-docker/aws-ecs.tf")
-    print(f)
+        return file.get()["Body"].read().decode("utf-8")
