@@ -99,3 +99,7 @@ venv.bak/
 dmypy.json
 
 .idea/
+
+
+tf_generator/package
+*.DS_Store
