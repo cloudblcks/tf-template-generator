@@ -13,6 +13,12 @@ TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 def lambda_handler(event, context):
     args = event["queryStringParameters"]
+    print(args)
+    if args.get("hosting") == "lambda":
+        args["serverless"] = "lambda"
+    if args.get("static") == "yes":
+        args["static"] = "static"
+
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
     generator = TerraformGenerator(template_map)
@@ -21,8 +27,8 @@ def lambda_handler(event, context):
         compute_service=args.get("compute"),
         serverless_service=args.get("serverless"),
         storage_service=args.get("storage"),
-        database_service=args.get("database"),
-        website_host_service=args.get("website"),
+        database_service=args.get("db"),
+        website_host_service=args.get("static"),
     )
     return {
         "statusCode": 200,
