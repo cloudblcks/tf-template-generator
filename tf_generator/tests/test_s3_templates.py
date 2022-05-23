@@ -2,7 +2,6 @@ import json
 from typing import Dict
 
 import pytest
-
 from models.s3_templates import (
     ProviderServiceTemplates,
     ProviderTemplate,
@@ -90,12 +89,8 @@ TEST_DATA_SERVICE_CATEGORIES_FROM_JSON = [
 # fmt: on
 
 
-@pytest.mark.parametrize(
-    "name,uri,outputs,variables,expected", TEST_DATA_SERVICE_TEMPLATES_TO_DICT
-)
-def test_service_template_json_deserialisation(
-    name: str, uri: str, outputs: str, variables: str, expected: Dict
-):
+@pytest.mark.parametrize("name,uri,outputs,variables,expected", TEST_DATA_SERVICE_TEMPLATES_TO_DICT)
+def test_service_template_json_deserialisation(name: str, uri: str, outputs: str, variables: str, expected: Dict):
     template = ServiceTemplate(name, uri, outputs, variables)
     assert template.to_dict() == expected
     assert template.to_json() == json.dumps(expected)
@@ -109,9 +104,7 @@ def test_service_template_json_serialisation(s: str, expected: ServiceTemplate):
 
 
 @pytest.mark.parametrize("data,expected", TEST_DATA_PROVIDER_SERVICE_TEMPLATES_TO_DICT)
-def test_provider_service_template_json_deserialisation(
-    data: Dict[str, ServiceTemplate], expected: Dict
-):
+def test_provider_service_template_json_deserialisation(data: Dict[str, ServiceTemplate], expected: Dict):
     provider_templates = ProviderServiceTemplates(data)
     assert provider_templates.to_dict() == expected
     assert provider_templates.to_json() == json.dumps(expected)
@@ -124,9 +117,7 @@ def test_provider_service_template_json_serialisation(s, expected):
     assert provider_templates.to_json() == expected.to_json()
 
 
-@pytest.mark.parametrize(
-    "providers,provider_services,expected", TEST_DATA_SERVICE_CATEGORIES_TO_DICT
-)
+@pytest.mark.parametrize("providers,provider_services,expected", TEST_DATA_SERVICE_CATEGORIES_TO_DICT)
 def test_service_categories_json_deserialisation(
     providers: Dict[ServiceProvider, ProviderTemplate],
     provider_services: Dict[ServiceCategory, ServiceCategoryProviders],

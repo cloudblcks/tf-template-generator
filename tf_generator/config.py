@@ -13,9 +13,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
 def get_aws_secret(var_key):
     """Return the secret value from an AWS secret."""
     secrets_client = boto3.client("secretsmanager")
-    secret = secrets_client.get_secret_value(
-        SecretId=f"arn:aws:secretsmanager:{var_key}"
-    )
+    secret = secrets_client.get_secret_value(SecretId=f"arn:aws:secretsmanager:{var_key}")
     return secret["SecretString"]
 
 

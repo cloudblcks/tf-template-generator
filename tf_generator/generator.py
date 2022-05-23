@@ -2,7 +2,6 @@ import os
 from typing import Dict, Optional
 
 from jinja2 import Template
-
 from models.s3_templates import (
     ProviderTemplate,
     ServiceCategories,
@@ -47,17 +46,13 @@ class TerraformGenerator:
         templates = {}
 
         if compute_service:
-            templates[ServiceCategory.COMPUTE] = self.templates.get(
-                ServiceCategory.COMPUTE, provider, compute_service
-            )
+            templates[ServiceCategory.COMPUTE] = self.templates.get(ServiceCategory.COMPUTE, provider, compute_service)
         if serverless_service:
             templates[ServiceCategory.SERVERLESS] = self.templates.get(
                 ServiceCategory.SERVERLESS, provider, serverless_service
             )
         if storage_service:
-            templates[ServiceCategory.STORAGE] = self.templates.get(
-                ServiceCategory.STORAGE, provider, storage_service
-            )
+            templates[ServiceCategory.STORAGE] = self.templates.get(ServiceCategory.STORAGE, provider, storage_service)
         if database_service:
             templates[ServiceCategory.DATABASE] = self.templates.get(
                 ServiceCategory.DATABASE, provider, database_service
