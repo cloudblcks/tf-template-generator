@@ -82,9 +82,9 @@ resource "aws_lambda_function" "tf-generator" {
   ]
   architectures = ["arm64"]
   function_name = "tf-generator"
-
-  package_type = "Image"
-  image_uri    = "${aws_ecr_repository.repo.repository_url}@${data.aws_ecr_image.lambda_image.id}"
+  timeout       = 63
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.repo.repository_url}@${data.aws_ecr_image.lambda_image.id}"
 
   role = aws_iam_role.lambda_exec.arn
 }
