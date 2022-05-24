@@ -28,15 +28,87 @@ provider "aws" {
   region = var.aws_region
 }
 
+resource "aws_kms_key" "template_bucket_key" {
+  enable_key_rotation = true
+}
 
+resource "aws_kms_key" "log_bucket_key" {
+  enable_key_rotation = true
+}
+
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "s3-log-bucket"
+}
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  bucket = aws_s3_bucket.log_bucket.id
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket_versioning" "log_bucket_versioning" {
+  bucket = aws_s3_bucket.log_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "log_bucket_encryption" {
+  bucket = aws_s3_bucket.log_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.log_bucket_key.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "log-bucket_public_access" {
+  bucket                  = aws_s3_bucket.log_bucket.id
+  ignore_public_acls      = true
+  block_public_policy     = true
+  block_public_acls       = true
+  restrict_public_buckets = true
+}
 
 resource "aws_s3_bucket" "template_bucket" {
   bucket = "cloudblocks-templates"
 }
 
+resource "aws_s3_bucket_logging" "template_bucket_logging" {
+  bucket        = aws_s3_bucket.template_bucket.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "template-bucket-log/"
+}
+
+resource "aws_s3_bucket_versioning" "template_bucket_versioning" {
+  bucket = aws_s3_bucket.template_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "template_bucket_encryption" {
+  bucket = aws_s3_bucket.template_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.template_bucket_key.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
 resource "aws_s3_bucket_acl" "template_bucket_acl" {
   bucket = aws_s3_bucket.template_bucket.id
   acl    = "public-read"
+}
+
+resource "aws_s3_bucket_public_access_block" "template-bucket_public_access" {
+  bucket                  = aws_s3_bucket.template_bucket.id
+  ignore_public_acls      = true
+  block_public_policy     = true
+  block_public_acls       = true
+  restrict_public_buckets = true
 }
 
 
@@ -49,8 +121,21 @@ locals {
   ecr_image_tag       = "latest"
 }
 
+resource "aws_kms_key" "ecr_kms" {
+  enable_key_rotation = true
+}
+
 resource "aws_ecr_repository" "repo" {
-  name = local.ecr_repository_name
+  name                 = local.ecr_repository_name
+  image_tag_mutability = "IMMUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = aws_kms_key.ecr_kms.key_id
+  }
 }
 
 resource "null_resource" "ecr_image" {
@@ -85,14 +170,20 @@ resource "aws_lambda_function" "tf-generator" {
   timeout       = 63
   package_type  = "Image"
   image_uri     = "${aws_ecr_repository.repo.repository_url}@${data.aws_ecr_image.lambda_image.id}"
-
+  tracing_config {
+    mode = "Active"
+  }
   role = aws_iam_role.lambda_exec.arn
 }
 
-resource "aws_cloudwatch_log_group" "tf-generator" {
-  name = "/aws/lambda/${aws_lambda_function.tf-generator.function_name}"
+resource "aws_kms_key" "log_key" {
+  enable_key_rotation = true
+}
 
+resource "aws_cloudwatch_log_group" "tf-generator" {
+  name              = "/aws/lambda/${aws_lambda_function.tf-generator.function_name}"
   retention_in_days = 30
+  kms_key_id        = aws_kms_key.log_key.arn
 }
 
 resource "aws_iam_role" "lambda_exec" {
@@ -158,7 +249,7 @@ resource "aws_iam_user_policy" "github_action_s3_template_syncer_policy" {
                 "s3:DeleteObject",
                 "s3:GetObjectVersion"
             ],
-            "Resource": "*"
+            "Resource": "arn:aws:s3:::cloudblocks-templates/*"
         }
     ]
 }
@@ -213,8 +304,8 @@ resource "aws_apigatewayv2_route" "tf-generator" {
 }
 
 resource "aws_cloudwatch_log_group" "api_gw" {
-  name = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
-
+  name              = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
+  kms_key_id        = aws_kms_key.log_key.arn
   retention_in_days = 30
 }
 
