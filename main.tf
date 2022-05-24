@@ -37,7 +37,7 @@ resource "aws_kms_key" "log_bucket_key" {
 }
 
 resource "aws_s3_bucket" "log_bucket" {
-  bucket = "s3-log-bucket"
+  bucket = "cloudblocks-s3-log-bucket"
 }
 resource "aws_s3_bucket_acl" "log_bucket_acl" {
   bucket = aws_s3_bucket.log_bucket.id
@@ -176,9 +176,6 @@ resource "aws_lambda_function" "tf-generator" {
   role = aws_iam_role.lambda_exec.arn
 }
 
-resource "aws_kms_key" "log_key" {
-  enable_key_rotation = true
-}
 
 resource "aws_cloudwatch_log_group" "tf-generator" {
   name              = "/aws/lambda/${aws_lambda_function.tf-generator.function_name}"
@@ -301,6 +298,46 @@ resource "aws_apigatewayv2_route" "tf-generator" {
 
   route_key = "GET /generate"
   target    = "integrations/${aws_apigatewayv2_integration.tf-generator.id}"
+}
+
+resource "aws_kms_key" "log_key" {
+  enable_key_rotation = true
+  policy              = <<EOF
+{
+ "Version": "2012-10-17",
+    "Id": "key-default-1",
+    "Statement": [
+        {
+            "Sid": "Enable IAM User Permissions",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::${local.account_id}:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "logs.${var.aws_region}.amazonaws.com"
+            },
+            "Action": [
+                "kms:Encrypt*",
+                "kms:Decrypt*",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:Describe*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "ArnEquals": {
+                    "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${var.aws_region}:${local.account_id}:*"
+                }
+            }
+        }    
+    ]
+}
+  EOF
 }
 
 resource "aws_cloudwatch_log_group" "api_gw" {
