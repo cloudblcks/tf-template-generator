@@ -4,7 +4,7 @@ from typing import Dict, Optional, Union
 
 from models.utils import JsonSerialisable
 from strenum import LowercaseStrEnum
-from tf_loader import S3TerraformLoader
+from template_loader import S3TemplateLoader
 
 
 class ServiceProvider(LowercaseStrEnum):
@@ -44,12 +44,12 @@ class ProviderTemplate(JsonSerialisable):
 
         return d
 
-    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
+    def load(self, loader: Optional[S3TemplateLoader] = None) -> None:
         if self.template:
             return
 
         if not loader:
-            loader = S3TerraformLoader()
+            loader = S3TemplateLoader()
         self.template = loader.get_file(self.uri)
 
 
@@ -75,12 +75,12 @@ class ServiceTemplate(JsonSerialisable):
             variables=d.get("variables"),
         )
 
-    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
+    def load(self, loader: Optional[S3TemplateLoader] = None) -> None:
         if self.template:
             return
 
         if not loader:
-            loader = S3TerraformLoader()
+            loader = S3TemplateLoader()
         self.template = loader.get_file(self.uri)
 
         if self.outputs_uri:
@@ -101,7 +101,7 @@ class ProviderServiceTemplates(JsonSerialisable):
     def to_dict(self) -> Dict:
         return {str(key): value.to_dict() for key, value in self.templates.items()}
 
-    def get(self, service_key: str, loader: Optional[S3TerraformLoader] = None) -> ServiceTemplate:
+    def get(self, service_key: str, loader: Optional[S3TemplateLoader] = None) -> ServiceTemplate:
         if not self.templates.get(service_key):
             raise ValueError(f"No service template with key [{service_key}] found")
 
@@ -126,7 +126,7 @@ class ServiceCategoryProviders(JsonSerialisable):
         self,
         provider: ServiceProvider,
         service_key: str,
-        loader: Optional[S3TerraformLoader] = None,
+        loader: Optional[S3TemplateLoader] = None,
     ) -> ServiceTemplate:
         if not self.services.get(provider):
             raise ValueError(f"No service with key [{provider}] found")
@@ -154,7 +154,7 @@ class ServiceCategories(JsonSerialisable):
         }
 
     def load_all(self):
-        loader = S3TerraformLoader()
+        loader = S3TemplateLoader()
 
         for provider in self.providers.values():
             provider.load(loader)
@@ -168,7 +168,7 @@ class ServiceCategories(JsonSerialisable):
         category: ServiceCategory,
         provider: ServiceProvider,
         name: str,
-        loader: Optional[S3TerraformLoader] = None,
+        loader: Optional[S3TemplateLoader] = None,
     ) -> ServiceTemplate:
         if not self.provider_services.get(category):
             raise KeyError(f"No category named [{category}] found")

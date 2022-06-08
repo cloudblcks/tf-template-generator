@@ -8,14 +8,14 @@ from models.s3_templates import (
     ServiceCategory,
     ServiceTemplate,
 )
-from tf_loader import S3TerraformLoader
+from template_loader import S3TemplateLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 
 
 class TerraformGenerator:
     def __init__(self, templates_map: Dict, base_template: str = None):
-        self.loader = S3TerraformLoader()
+        self.loader = S3TemplateLoader()
         self.templates = ServiceCategories.from_dict(templates_map)
         if base_template:
             self.base = Template(base_template)
