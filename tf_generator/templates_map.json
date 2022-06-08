@@ -33,11 +33,11 @@
   },
   "database": {
     "aws": {
-      "postgresql": {
+      "postgres": {
         "service_name": "AWS RDS PostgreSQL",
-        "uri": "database/aws-rds/aws-rds-postgresql/aws-rds-postgresql.tf",
-        "outputs_uri": "database/aws-rds/aws-rds-postgresql/outputs.tf",
-        "variables_uri": "database/aws-rds/aws-rds-postgresql/variables.tf"
+        "uri": "database/aws-rds-simple/postgres/postgres.tf",
+        "outputs_uri": "database/aws-rds-simple/postgres/outputs.tf",
+        "variables_uri": "database/aws-rds-simple/postgres/variables.tf"
       }
     }
   },
