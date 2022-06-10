@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from enum import auto
 from typing import Dict, Optional, Union
 
-from strenum import LowercaseStrEnum
-
 from models.utils import JsonSerialisable
-from tf_loader import S3TerraformLoader
+from strenum import LowercaseStrEnum
+from template_loader import S3TemplateLoader
 
 
 class ServiceProvider(LowercaseStrEnum):
@@ -31,7 +30,7 @@ class ProviderTemplate(JsonSerialisable):
     template: Optional[str] = None
 
     @classmethod
-    def from_dict(cls, d: Dict):
+    def from_dict(cls, d: Dict[str, Union[str, ServiceProvider, Optional[str]]]):
         return cls(
             name=d.get("name"),
             uri=d.get("uri"),
@@ -45,12 +44,12 @@ class ProviderTemplate(JsonSerialisable):
 
         return d
 
-    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
+    def load(self, loader: Optional[S3TemplateLoader] = None) -> None:
         if self.template:
             return
 
         if not loader:
-            loader = S3TerraformLoader()
+            loader = S3TemplateLoader()
         self.template = loader.get_file(self.uri)
 
 
@@ -76,12 +75,12 @@ class ServiceTemplate(JsonSerialisable):
             variables=d.get("variables"),
         )
 
-    def load(self, loader: Optional[S3TerraformLoader] = None) -> None:
+    def load(self, loader: Optional[S3TemplateLoader] = None) -> None:
         if self.template:
             return
 
         if not loader:
-            loader = S3TerraformLoader()
+            loader = S3TemplateLoader()
         self.template = loader.get_file(self.uri)
 
         if self.outputs_uri:
@@ -97,24 +96,18 @@ class ProviderServiceTemplates(JsonSerialisable):
 
     @classmethod
     def from_dict(cls, d: Dict):
-        return cls(
-            templates={
-                key: ServiceTemplate.from_dict(value) for key, value in d.items()
-            }
-        )
+        return cls(templates={key: ServiceTemplate.from_dict(value) for key, value in d.items()})
 
     def to_dict(self) -> Dict:
         return {str(key): value.to_dict() for key, value in self.templates.items()}
 
-    def get(
-        self, service_key: str, loader: Optional[S3TerraformLoader] = None
-    ) -> ServiceTemplate:
+    def get(self, service_key: str, loader: Optional[S3TemplateLoader] = None) -> ServiceTemplate:
         if not self.templates.get(service_key):
             raise ValueError(f"No service template with key [{service_key}] found")
 
         template = self.templates.get(service_key)
         if template:
-            template.load()
+            template.load(loader)
         return template
 
 
@@ -124,12 +117,7 @@ class ServiceCategoryProviders(JsonSerialisable):
 
     @classmethod
     def from_dict(cls, d: Dict):
-        return cls(
-            services={
-                key: ProviderServiceTemplates.from_dict(value)
-                for key, value in d.items()
-            }
-        )
+        return cls(services={key: ProviderServiceTemplates.from_dict(value) for key, value in d.items()})
 
     def to_dict(self) -> Dict:
         return {str(key): value.to_dict() for key, value in self.services.items()}
@@ -138,7 +126,7 @@ class ServiceCategoryProviders(JsonSerialisable):
         self,
         provider: ServiceProvider,
         service_key: str,
-        loader: Optional[S3TerraformLoader] = None,
+        loader: Optional[S3TemplateLoader] = None,
     ) -> ServiceTemplate:
         if not self.services.get(provider):
             raise ValueError(f"No service with key [{provider}] found")
@@ -155,29 +143,18 @@ class ServiceCategories(JsonSerialisable):
     def from_dict(cls, d: Dict):
         providers = d.pop("providers")
         return cls(
-            providers={
-                key: ProviderTemplate.from_dict(value)
-                for key, value in providers.items()
-            },
-            provider_services={
-                key: ServiceCategoryProviders.from_dict(value)
-                for key, value in d.items()
-            },
+            providers={key: ProviderTemplate.from_dict(value) for key, value in providers.items()},
+            provider_services={key: ServiceCategoryProviders.from_dict(value) for key, value in d.items()},
         )
 
     def to_dict(self) -> Dict:
         return {
-            "providers": {
-                str(key): value.to_dict() for key, value in self.providers.items()
-            },
-            **{
-                str(key): value.to_dict()
-                for key, value in self.provider_services.items()
-            },
+            "providers": {str(key): value.to_dict() for key, value in self.providers.items()},
+            **{str(key): value.to_dict() for key, value in self.provider_services.items()},
         }
 
     def load_all(self):
-        loader = S3TerraformLoader()
+        loader = S3TemplateLoader()
 
         for provider in self.providers.values():
             provider.load(loader)
@@ -191,7 +168,7 @@ class ServiceCategories(JsonSerialisable):
         category: ServiceCategory,
         provider: ServiceProvider,
         name: str,
-        loader: Optional[S3TerraformLoader] = None,
+        loader: Optional[S3TemplateLoader] = None,
     ) -> ServiceTemplate:
         if not self.provider_services.get(category):
             raise KeyError(f"No category named [{category}] found")
