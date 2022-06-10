@@ -64,6 +64,10 @@ class TerraformGenerator:
 
         return templates
 
+    def generate_template(self, providers: [str], compute_services):
+
+        pass
+
     def generate_template(
         self,
         provider: str,
