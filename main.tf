@@ -134,7 +134,7 @@ resource "aws_ecr_repository" "repo" {
 
   encryption_configuration {
     encryption_type = "KMS"
-    kms_key         = aws_kms_key.ecr_kms.key_id
+    kms_key         = aws_kms_key.ecr_kms.arn
   }
 }
 
@@ -142,6 +142,7 @@ resource "null_resource" "ecr_image" {
   triggers = {
     python_file = sha1(join("", [for f in fileset("${path.module}", "tf_generator/**") : filesha1(f)]))
   }
+  depends_on = [aws_ecr_repository.repo]
 
   provisioner "local-exec" {
     command = <<EOF
@@ -258,6 +259,12 @@ EOF
 resource "aws_apigatewayv2_api" "lambda" {
   name          = "serverless_lambda_gw"
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["POST", "GET", "OPTIONS"]
+    allow_headers = ["Content-Type", "Authorization", "X-Amz-Date", "X-Api-Key", "X-Amz-Security-Token"]
+    max_age       = 300
+  }
 }
 
 resource "aws_apigatewayv2_stage" "lambda" {
@@ -285,6 +292,7 @@ resource "aws_apigatewayv2_stage" "lambda" {
   }
 }
 
+
 resource "aws_apigatewayv2_integration" "tf-generator" {
   api_id = aws_apigatewayv2_api.lambda.id
 
@@ -299,6 +307,19 @@ resource "aws_apigatewayv2_route" "tf-generator" {
   route_key = "GET /generate"
   target    = "integrations/${aws_apigatewayv2_integration.tf-generator.id}"
 }
+
+resource "aws_apigatewayv2_route" "tf-generator-post" {
+  api_id = aws_apigatewayv2_api.lambda.id
+
+  route_key = "POST /generate"
+  target    = "integrations/${aws_apigatewayv2_integration.tf-generator.id}"
+}
+
+#resource "aws_apigatewayv2_route" "tf-generator-options" {
+#  api_id = aws_apigatewayv2_api.lambda.id
+#  route_key = "OPTIONS /generate"
+#
+#}
 
 resource "aws_kms_key" "log_key" {
   enable_key_rotation = true
