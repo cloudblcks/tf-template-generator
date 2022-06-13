@@ -8,6 +8,18 @@ from models.s3_templates import (
     ServiceCategory,
     ServiceTemplate,
 )
+
+from models.high_level_items import (
+    HighLevelCompute,
+    HighLevelDB,
+    HighLevelInternet,
+    HighLevelStorage,
+    HighLevelItem,
+    HighLevelItemType,
+)
+
+from models.low_level_items_aws import LowLevelAWSItem, Cloudfront, S3, EC2, VPC, generateId, RDS
+
 from template_loader import S3TemplateLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
@@ -64,10 +76,6 @@ class TerraformGenerator:
 
         return templates
 
-    def generate_template(self, providers: [str], compute_services):
-
-        pass
-
     def generate_template(
         self,
         provider: str,
@@ -92,3 +100,66 @@ class TerraformGenerator:
                 "services": [value for value in service_templates.values() if value],
             }
         )
+
+    def generate_low_level_aws_map(self, input_arr: [HighLevelItem]) -> {str: LowLevelAWSItem}:
+        cloudfront: Optional[Cloudfront] = None
+        low_level_map = {str: LowLevelAWSItem}
+        input_computes, input_dbs, input_storages = breakdown_input_arr(input_arr)
+        internet_item = get_internet_item(input_arr)
+        if internet_item:
+            cloudfront = Cloudfront(internet_item.id)
+            low_level_map[internet_item.id] = cloudfront
+        for storage in input_storages:
+            s3 = S3(storage.id)
+            if storage.needs_internet() and cloudfront:
+                s3.cloudfront = cloudfront
+            low_level_map[storage.id] = s3
+        for compute in input_computes:
+            ec2 = EC2(compute.id)
+            linked_compute = compute.linkedCompute(low_level_map)
+            if linked_compute:
+                ec2.vpc = linked_compute[0].vpc
+            else:
+                ec2.vpc = VPC(generateId())
+            # TODO: handle subnets
+            if compute.needs_internet:
+                ec2.cloudfront = cloudfront
+            low_level_map[compute.id] = ec2
+        for db in input_dbs:
+            rds = RDS(db.id)
+            linked_compute = db.linkedCompute(low_level_map)
+            if linked_compute:
+                rds.vpc = linked_compute[0].vpc
+            else:
+                rds.vpc = VPC(generateId())
+            # TODO: handle subnets
+            low_level_map[rds.id] = rds
+        return low_level_map
+
+
+def breakdown_input_arr(input_arr: [HighLevelItem]) -> ([HighLevelCompute], [HighLevelDB], [HighLevelStorage]):
+    computes = [HighLevelCompute]
+    dbs = [HighLevelDB]
+    storages = [HighLevelStorage]
+    for item in input_arr:
+        match item.gettype():
+            case HighLevelItemType.COMPUTE:
+                computes.append(item)
+                break
+            case HighLevelItemType.DB:
+                dbs.append(item)
+                break
+            case HighLevelItemType.STORAGE:
+                storages.append(item)
+                break
+    return computes, dbs, storages
+
+
+def is_internet_needed(input_arr: [HighLevelItem]) -> bool:
+    return len(get_internet_item(input_arr).bindings) > 0
+
+
+def get_internet_item(input_arr: [HighLevelItem]) -> HighLevelInternet:
+    for item in input_arr:
+        if item.gettype == HighLevelItemType.INTERNET:
+            return item
