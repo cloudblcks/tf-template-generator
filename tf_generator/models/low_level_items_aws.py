@@ -1,3 +1,4 @@
+import json
 import uuid
 
 
@@ -38,7 +39,7 @@ class LowLevelDBItem(LowLevelAWSItem):
 class EC2(LowLevelComputeItem):
     def __init__(self, new_id):
         super().__init__(new_id)
-        self.lb: ALB = ALB(generateId())
+        self.lb: ALB = ALB(generate_id())
 
 
 class RDS(LowLevelDBItem):
@@ -49,5 +50,13 @@ class S3(LowLevelStorageItem):
     pass
 
 
-def generateId() -> str:
+class TerraformGeneratorAWS:
+    def __init__(self, ll_map: {str: LowLevelAWSItem}):
+        self.ll_map = ll_map
+
+    def generate_string_template(self) -> str:
+        return str(json.dumps(self.ll_map))
+
+
+def generate_id() -> str:
     return uuid.uuid4().hex
