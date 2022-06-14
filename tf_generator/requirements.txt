@@ -9,3 +9,5 @@ pre-commit==2.19.0
 pytest==7.1.2
 python-dotenv==0.20.0
 strenum==0.4.7
+# cdktf==0.11.2
+# cdktf_cdktf_provider_aws==8.0.9

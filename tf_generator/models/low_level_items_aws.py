@@ -6,9 +6,13 @@ class LowLevelAWSItem:
     def __init__(self, new_id: str):
         self.id: str = new_id
 
+    def generate_cdktf_config(self):
+        raise NotImplementedError()
+
 
 class LowLevelInfraItem(LowLevelAWSItem):
-    pass
+    def generate_cdktf_config(self):
+        raise NotImplementedError()
 
 
 class VPC(LowLevelInfraItem):
@@ -24,21 +28,36 @@ class Cloudfront(LowLevelInfraItem):
 
 
 class LowLevelComputeItem(LowLevelAWSItem):
-    cloudfront: Cloudfront
-    vpc: VPC
+    def __init__(self, new_id: str, vpc: VPC, cloudfront: Cloudfront):
+        super().__init__(new_id)
+        self.vpc: VPC = vpc
+        self.cloudfront: Cloudfront = cloudfront
+
+    def generate_cdktf_config(self):
+        raise NotImplementedError()
 
 
 class LowLevelStorageItem(LowLevelAWSItem):
-    cloudfront: Cloudfront
+    def __init__(self, new_id: str, cloudfront: Cloudfront):
+        super().__init__(new_id)
+        self.cloudfront: Cloudfront = cloudfront
+
+    def generate_cdktf_config(self):
+        raise NotImplementedError()
 
 
 class LowLevelDBItem(LowLevelAWSItem):
-    vpc: VPC
+    def __init__(self, new_id: str, vpc: VPC):
+        super().__init__(new_id)
+        self.vpc = vpc
+
+    def generate_cdktf_config(self):
+        raise NotImplementedError()
 
 
 class EC2(LowLevelComputeItem):
-    def __init__(self, new_id):
-        super().__init__(new_id)
+    def __init__(self, new_id, vpc: VPC, cloudfront: Cloudfront):
+        super().__init__(new_id, vpc, cloudfront)
         self.lb: ALB = ALB(generate_id())
 
 
@@ -50,7 +69,7 @@ class S3(LowLevelStorageItem):
     pass
 
 
-class TerraformGeneratorAWS:
+class TerraformStackGeneratorAWS:
     def __init__(self, ll_map: {str: LowLevelAWSItem}):
         self.ll_map = ll_map
 
