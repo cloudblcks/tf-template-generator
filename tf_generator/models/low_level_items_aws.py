@@ -5,7 +5,7 @@ from typing import Optional, Dict
 
 from jinja2 import Template
 
-from models.s3_templates import ServiceCategories, ServiceCategory, ServiceProvider
+from models.s3_templates import ServiceCategories, ServiceCategory, ServiceProvider, ServiceTemplate
 from template_loader import S3TemplateLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
@@ -91,8 +91,6 @@ class S3(LowLevelStorageItem):
     def __init__(self, new_id: str, templates: ServiceCategories):
         super().__init__(new_id)
         sub_templates = templates.get(ServiceCategory.WEBSITE_HOST, ServiceProvider.AWS, "static")
-        print("sub_templates:")
-        print(sub_templates)
         if sub_templates.template:
             self.template = Template(sub_templates.template)
         if sub_templates.outputs:
@@ -133,18 +131,25 @@ class TerraformGeneratorAWS:
     def __init__(self, ll_map: Dict[str, LowLevelAWSItem]):
         self.ll_map = ll_map
 
-    def generate_string_template(self) -> str:
+    def generate_string_template(self) -> ServiceTemplate:
         out_template = ""
         out_variables = ""
         out_outputs = ""
-        print(self.ll_map)
         for item in self.ll_map.values():
-            print(item)
             config = item.generate_config()
             out_template += config.main
             out_variables += config.variables
             out_outputs += config.outputs
-        return out_variables + out_template + out_variables
+        out = ServiceTemplate(
+            service_name="All services",
+            uri="",
+            outputs_uri=None,
+            variables_uri=None,
+            template=out_template,
+            variables=out_variables,
+            outputs=out_outputs,
+        )
+        return out
 
 
 def generate_id() -> str:

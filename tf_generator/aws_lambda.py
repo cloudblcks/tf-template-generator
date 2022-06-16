@@ -14,8 +14,8 @@ def lambda_handler(event, context):
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
         generator = TerraformGenerator(template_map)
-
-    if "queryStringParameters" in event.keys():
+    print(json.dumps(event))
+    if "queryStringParameters" in event.keys() and event["queryStringParameters"]:
         args = event["queryStringParameters"]
         if args.get("hosting") == "lambda":
             args["serverless"] = "lambda"
@@ -35,6 +35,6 @@ def lambda_handler(event, context):
             "body": templates,
         }
     else:
-        data = event["body"]["cloudblocks_data"]
+        data = json.loads(event["body"])["cloudblocks_data"]
         templates = generator.generate_template_from_json(data)
         return {"statusCode": 200, "body": templates}

@@ -18,13 +18,12 @@ class HighLevelBindingDirection(Enum):
 
     @staticmethod
     def match_string(string: str) -> "HighLevelBindingDirection":
-        match string:
-            case "to":
-                return HighLevelBindingDirection.TO
-            case "from":
-                return HighLevelBindingDirection.FROM
-            case "both":
-                return HighLevelBindingDirection.BOTH
+        if string == "to":
+            return HighLevelBindingDirection.TO
+        elif string == "from":
+            return HighLevelBindingDirection.FROM
+        elif string == "both":
+            return HighLevelBindingDirection.BOTH
 
 
 class HighLevelItem:

@@ -115,20 +115,18 @@ class TerraformGenerator:
         ll_map = self.generate_low_level_aws_map(hl_arr)
         generator = TerraformGeneratorAWS(ll_map)
         provider_template = self.get_provider_template("aws")
-        self.base.render(
+        out = self.base.render(
             {
                 "providers": provider_template,
-                "services": generator.generate_string_template(),
+                "services": [generator.generate_string_template()],
             }
         )
-        return generator.generate_string_template()
+        return out
 
     def generate_low_level_aws_map(self, input_arr: List[HighLevelItem]) -> Dict[str, LowLevelAWSItem]:
         cloudfront: Optional[Cloudfront] = None
         low_level_map: Dict[str:, LowLevelAWSItem] = {}
-        print(input_arr)
         input_computes, input_dbs, input_storages = breakdown_input_arr(input_arr)
-        print(input_storages)
         internet_item = get_internet_item(input_arr)
         if internet_item:
             cloudfront = Cloudfront(internet_item._id)
@@ -168,13 +166,12 @@ def json_to_high_level_list(json_arr: []) -> [HighLevelItem]:
         item_type = item["clbksType"]
         _id = item["clbksId"]
         bindings = item["bindings"]
-        match item_type:
-            case "compute":
-                new_item = HighLevelCompute(_id)
-            case "db":
-                new_item = HighLevelDB(_id)
-            case "storage":
-                new_item = HighLevelStorage(_id)
+        if item_type == "compute":
+            new_item = HighLevelCompute(_id)
+        elif item_type == "db":
+            new_item = HighLevelDB(_id)
+        elif item_type == "storage":
+            new_item = HighLevelStorage(_id)
         if new_item:
             for binding in bindings:
                 binding_id = binding["id"]
@@ -191,16 +188,12 @@ def breakdown_input_arr(input_arr: [HighLevelItem]) -> ([HighLevelCompute], [Hig
     dbs: List[HighLevelDB] = []
     storages: List[HighLevelStorage] = []
     for item in input_arr:
-        match item.gettype():
-            case HighLevelItemType.COMPUTE:
-                computes.append(item)
-                break
-            case HighLevelItemType.DB:
-                dbs.append(item)
-                break
-            case HighLevelItemType.STORAGE:
-                storages.append(item)
-                break
+        if item.gettype() == HighLevelItemType.COMPUTE:
+            computes.append(item)
+        elif item.gettype() == HighLevelItemType.DB:
+            dbs.append(item)
+        elif item.gettype() == HighLevelItemType.STORAGE:
+            storages.append(item)
     return computes, dbs, storages
 
 
