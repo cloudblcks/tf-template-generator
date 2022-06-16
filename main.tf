@@ -118,7 +118,7 @@ locals {
   prefix              = "git"
   account_id          = data.aws_caller_identity.current.account_id
   ecr_repository_name = "${local.prefix}-tf-generator-lambda-container"
-  ecr_image_tag       = "latest"
+  ecr_image_tag       = formatdate("DDMMMYYYYhhmmss", timestamp())
 }
 
 resource "aws_kms_key" "ecr_kms" {
