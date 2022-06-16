@@ -1,8 +1,8 @@
-import argparse
 import json
 import os
 
 from dotenv import load_dotenv
+
 from generator import TerraformGenerator
 
 load_dotenv()
@@ -11,11 +11,12 @@ TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 
 def lambda_handler(event, context):
-    args = event["queryStringParameters"]
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
         generator = TerraformGenerator(template_map)
-    if args is not None:
+
+    if "queryStringParameters" in event.keys():
+        args = event["queryStringParameters"]
         if args.get("hosting") == "lambda":
             args["serverless"] = "lambda"
         if args.get("static") == "yes":

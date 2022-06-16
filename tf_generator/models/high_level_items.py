@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from enum import Enum
 
-from low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem
+from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem
 
 
 class HighLevelItemType(Enum):
@@ -31,7 +31,7 @@ class HighLevelItem:
     def __init__(self, _id: str, bindings: ["HighLevelBinding"] = None):
         if bindings is None:
             bindings = []
-        self.id: str = _id
+        self._id: str = _id
         self.bindings: ["HighLevelItem"] = bindings
 
     def needs_internet(self) -> bool:
@@ -44,8 +44,8 @@ class HighLevelItem:
         out = []
 
         for x in self.bindings.values():
-            if x.gettype == HighLevelItemType.COMPUTE and x.id in list(input_map):
-                out.append(input_map[x.id])
+            if x.gettype == HighLevelItemType.COMPUTE and x._id in list(input_map):
+                out.append(input_map[x._id])
         return out
 
     @abstractmethod

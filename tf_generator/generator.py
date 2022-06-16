@@ -1,13 +1,7 @@
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from jinja2 import Template
-from models.s3_templates import (
-    ProviderTemplate,
-    ServiceCategories,
-    ServiceCategory,
-    ServiceTemplate,
-)
 
 from models.high_level_items import (
     HighLevelCompute,
@@ -19,7 +13,6 @@ from models.high_level_items import (
     HighLevelBinding,
     HighLevelBindingDirection,
 )
-
 from models.low_level_items_aws import (
     LowLevelAWSItem,
     Cloudfront,
@@ -30,7 +23,12 @@ from models.low_level_items_aws import (
     TerraformGeneratorAWS,
     generate_id,
 )
-
+from models.s3_templates import (
+    ProviderTemplate,
+    ServiceCategories,
+    ServiceCategory,
+    ServiceTemplate,
+)
 from template_loader import S3TemplateLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
@@ -114,9 +112,53 @@ class TerraformGenerator:
 
     def generate_template_from_json(self, json_data: []) -> str:
         hl_arr = json_to_high_level_list(json_data)
-        ll_map = generate_low_level_aws_map(hl_arr)
+        ll_map = self.generate_low_level_aws_map(hl_arr)
         generator = TerraformGeneratorAWS(ll_map)
+        provider_template = self.get_provider_template("aws")
+        self.base.render(
+            {
+                "providers": provider_template,
+                "services": generator.generate_string_template(),
+            }
+        )
         return generator.generate_string_template()
+
+    def generate_low_level_aws_map(self, input_arr: List[HighLevelItem]) -> Dict[str, LowLevelAWSItem]:
+        cloudfront: Optional[Cloudfront] = None
+        low_level_map: Dict[str:, LowLevelAWSItem] = {}
+        print(input_arr)
+        input_computes, input_dbs, input_storages = breakdown_input_arr(input_arr)
+        print(input_storages)
+        internet_item = get_internet_item(input_arr)
+        if internet_item:
+            cloudfront = Cloudfront(internet_item._id)
+            low_level_map[internet_item._id] = cloudfront
+        for storage in input_storages:
+            s3 = S3(storage._id, self.templates)
+            if storage.needs_internet() and cloudfront:
+                s3.cloudfront = cloudfront
+            low_level_map[storage._id] = s3
+        for compute in input_computes:
+            ec2 = EC2(compute._id)
+            linked_compute = compute.linkedCompute(low_level_map)
+            if linked_compute:
+                ec2.vpc = linked_compute[0].vpc
+            else:
+                ec2.vpc = VPC(generate_id())
+            # TODO: handle subnets
+            if compute.needs_internet:
+                ec2.cloudfront = cloudfront
+            low_level_map[compute._id] = ec2
+        for db in input_dbs:
+            rds = RDS(db._id)
+            linked_compute = db.linkedCompute(low_level_map)
+            if linked_compute:
+                rds.vpc = linked_compute[0].vpc
+            else:
+                rds.vpc = VPC(generate_id())
+            # TODO: handle subnets
+            low_level_map[rds._id] = rds
+        return low_level_map
 
 
 def json_to_high_level_list(json_arr: []) -> [HighLevelItem]:
@@ -133,55 +175,21 @@ def json_to_high_level_list(json_arr: []) -> [HighLevelItem]:
                 new_item = HighLevelDB(_id)
             case "storage":
                 new_item = HighLevelStorage(_id)
-        for binding in bindings:
-            binding_id = binding["id"]
-            direction = HighLevelBindingDirection.match_string(binding["direction"])
-            for el in out:
-                if el.id == binding_id:
-                    new_item.bindings.append(HighLevelBinding(el, direction))
+        if new_item:
+            for binding in bindings:
+                binding_id = binding["id"]
+                direction = HighLevelBindingDirection.match_string(binding["direction"])
+                for el in out:
+                    if el._id == binding_id:
+                        new_item.bindings.append(HighLevelBinding(el, direction))
+            out.append(new_item)
     return out
 
 
-def generate_low_level_aws_map(input_arr: [HighLevelItem]) -> {str: LowLevelAWSItem}:
-    cloudfront: Optional[Cloudfront] = None
-    low_level_map = {str: LowLevelAWSItem}
-    input_computes, input_dbs, input_storages = breakdown_input_arr(input_arr)
-    internet_item = get_internet_item(input_arr)
-    if internet_item:
-        cloudfront = Cloudfront(internet_item.id)
-        low_level_map[internet_item.id] = cloudfront
-    for storage in input_storages:
-        s3 = S3(storage.id)
-        if storage.needs_internet() and cloudfront:
-            s3.cloudfront = cloudfront
-        low_level_map[storage.id] = s3
-    for compute in input_computes:
-        ec2 = EC2(compute.id)
-        linked_compute = compute.linkedCompute(low_level_map)
-        if linked_compute:
-            ec2.vpc = linked_compute[0].vpc
-        else:
-            ec2.vpc = VPC(generate_id())
-        # TODO: handle subnets
-        if compute.needs_internet:
-            ec2.cloudfront = cloudfront
-        low_level_map[compute.id] = ec2
-    for db in input_dbs:
-        rds = RDS(db.id)
-        linked_compute = db.linkedCompute(low_level_map)
-        if linked_compute:
-            rds.vpc = linked_compute[0].vpc
-        else:
-            rds.vpc = VPC(generate_id())
-        # TODO: handle subnets
-        low_level_map[rds.id] = rds
-    return low_level_map
-
-
 def breakdown_input_arr(input_arr: [HighLevelItem]) -> ([HighLevelCompute], [HighLevelDB], [HighLevelStorage]):
-    computes = [HighLevelCompute]
-    dbs = [HighLevelDB]
-    storages = [HighLevelStorage]
+    computes: List[HighLevelCompute] = []
+    dbs: List[HighLevelDB] = []
+    storages: List[HighLevelStorage] = []
     for item in input_arr:
         match item.gettype():
             case HighLevelItemType.COMPUTE:
