@@ -1,8 +1,10 @@
+import json
 import os
 from typing import Dict, Optional, List
 
 from jinja2 import Template
 
+from main import TEMPLATES_MAP_PATH
 from models.high_level_items import (
     HighLevelCompute,
     HighLevelDB,
@@ -34,7 +36,11 @@ BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 
 
 class TerraformGenerator:
-    def __init__(self, templates_map: Dict, base_template: str = None):
+    def __init__(self, templates_map: Dict = None, base_template: str = None):
+        if not templates_map:
+            with open(TEMPLATES_MAP_PATH, "r") as f:
+                template_map = json.load(f)
+
         self.loader = S3TemplateLoader()
         self.templates = ServiceCategories.from_dict(templates_map)
         if base_template:
@@ -158,7 +164,7 @@ class TerraformGenerator:
         return low_level_map
 
 
-def json_to_high_level_list(json_arr: []) -> [HighLevelItem]:
+def json_to_high_level_list(json_arr: List[Dict]) -> [HighLevelItem]:
     out: [HighLevelItem] = []
     for item in json_arr:
         new_item: Optional[HighLevelItem] = None
