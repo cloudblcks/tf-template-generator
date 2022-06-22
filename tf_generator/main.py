@@ -8,6 +8,7 @@ from cloup.constraints import mutually_exclusive
 from dotenv import load_dotenv
 
 import schema_validator
+import template_writer
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
 from models.s3_templates import ServiceProvider
@@ -54,29 +55,44 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    "--file",
-    "-f",
-    help="""Path to mapping file, in either JSON or YAML formats
+@cloup.option_group(
+    "Data Sources",
+    cloup.option(
+        "--file",
+        "-f",
+        help="""Path to mapping file, in either JSON or YAML formats
     Valid filetypes: .json .yml .yaml""",
+    ),
+    cloup.option("--data", "-d", help="Inline JSON mapping"),
+    constraint=mutually_exclusive,
 )
-@click.option(
+@cloup.option(
     "--out",
     "-o",
     default=None,
     help="Path to output file (Recommended to use .tf suffix). If none supplied, will print output to stdout",
 )
-@click.option(
+@cloup.option(
     "--config",
     "-c",
     default=None,
     help="Path to configuration python file. (Dangerous, use only to edit default values)",
 )
-def parse(file, out, config):
+def parse(file, data, out, config):
     """
     Generate Terraform configuration from Cloudblocks mapping file
     """
-    pass
+    if file:
+        data = load_mapping(file)
+
+    generator = TerraformGenerator()
+    templates = generator.generate_template_from_json(data)
+    if out:
+        template_writer.write(out, data)
+    else:
+        print(data)
+
+    return templates
 
 
 @cli.command()
