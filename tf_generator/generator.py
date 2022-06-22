@@ -15,7 +15,6 @@ from models.high_level_items import (
 )
 from models.low_level_items_aws import (
     LowLevelAWSItem,
-    Cloudfront,
     S3,
     EC2,
     VPC,
@@ -124,17 +123,17 @@ class TerraformGenerator:
         return out
 
     def generate_low_level_aws_map(self, input_arr: List[HighLevelItem]) -> Dict[str, LowLevelAWSItem]:
-        cloudfront: Optional[Cloudfront] = None
+        # cloudfront: Optional[Cloudfront] = None
         low_level_map: Dict[str:, LowLevelAWSItem] = {}
         input_computes, input_dbs, input_storages = breakdown_input_arr(input_arr)
-        internet_item = get_internet_item(input_arr)
-        if internet_item:
-            cloudfront = Cloudfront(internet_item._id)
-            low_level_map[internet_item._id] = cloudfront
+        # internet_item = get_internet_item(input_arr)
+        # if internet_item:
+        #     cloudfront = Cloudfront(internet_item._id)
+        #     low_level_map[internet_item._id] = cloudfront
         for storage in input_storages:
             s3 = S3(storage._id, self.templates)
-            if storage.needs_internet() and cloudfront:
-                s3.cloudfront = cloudfront
+            # if storage.needs_internet() and cloudfront:
+            #     s3.cloudfront = cloudfront
             low_level_map[storage._id] = s3
         for compute in input_computes:
             ec2 = EC2(compute._id)
@@ -144,8 +143,8 @@ class TerraformGenerator:
             else:
                 ec2.vpc = VPC(generate_id())
             # TODO: handle subnets
-            if compute.needs_internet:
-                ec2.cloudfront = cloudfront
+            # if compute.needs_internet:
+            #     ec2.cloudfront = cloudfront
             low_level_map[compute._id] = ec2
         for db in input_dbs:
             rds = RDS(db._id)
