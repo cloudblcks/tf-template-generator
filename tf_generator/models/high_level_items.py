@@ -1,14 +1,19 @@
 from abc import abstractmethod
-from enum import Enum
+from enum import Enum, auto
+
+from strenum import LowercaseStrEnum
 
 from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem
 
 
-class HighLevelItemType(Enum):
-    COMPUTE = 0
-    DB = 1
-    STORAGE = 2
-    INTERNET = 3
+class HighLevelItemType(LowercaseStrEnum):
+    COMPUTE = auto()
+    DB = auto()
+    STORAGE = auto()
+    INTERNET = auto()
+
+
+HIGH_LEVEL_ITEM_TYPES = [x for x in HighLevelItemType]
 
 
 class HighLevelBindingDirection(Enum):
