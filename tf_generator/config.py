@@ -1,6 +1,9 @@
+import json
 import os
 
 import boto3
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 AWS_REGION = "us-west-1"
 
@@ -9,6 +12,10 @@ GENERATED_TF_BUCKET = "cloudblocks-generated-tf"
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
+
+CLOUD_PROVIDER_CONFIG_PATH = os.path.join(BASE_DIR, "data", "cloud_providers.json")
+with open(CLOUD_PROVIDER_CONFIG_PATH, "r") as f:
+    CLOUD_PROVIDER_SETTINGS = json.load(f)
 
 
 def get_aws_secret(var_key):

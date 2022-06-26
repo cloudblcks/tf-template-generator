@@ -16,10 +16,10 @@ class HighLevelItemType(LowercaseStrEnum):
 HIGH_LEVEL_ITEM_TYPES = [x for x in HighLevelItemType]
 
 
-class HighLevelBindingDirection(Enum):
-    TO = 0
-    FROM = 1
-    BOTH = 2
+class HighLevelBindingDirection(LowercaseStrEnum):
+    TO = auto()
+    FROM = auto()
+    BOTH = auto()
 
     @staticmethod
     def match_string(string: str) -> "HighLevelBindingDirection":
@@ -29,6 +29,9 @@ class HighLevelBindingDirection(Enum):
             return HighLevelBindingDirection.FROM
         elif string == "both":
             return HighLevelBindingDirection.BOTH
+
+
+HIGH_LEVEL_BINDING_DIRECTIONS = [x for x in HighLevelBindingDirection]
 
 
 class HighLevelItem:
