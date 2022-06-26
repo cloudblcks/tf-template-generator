@@ -3,24 +3,21 @@
 ###############
 variable "ecs_cluster_name" {
   description = "Name of the ECS cluster"
-  default     = "minerva-prod"
+  default     = {% cluster_name %}
 }
 variable "amis" {
   description = "Which AMI to spawn."
-  default     = {
-    eu-west-1 = "ami-029574c9b0349a8a7"
-  }
 }
 variable "instance_type" {
   default = "t2.micro"
 }
-variable "docker_image_url_django" {
+variable "docker_image_url" {
   description = "Docker image to run in the ECS cluster"
-  default     = "808221725440.dkr.ecr.eu-west-1.amazonaws.com/minerva:latest"
+  default     = {% docker_image_url %}
 }
-variable "app_count" {
+variable "desired_app_count" {
   description = "Number of Docker containers to run"
-  default     = 2
+  default     = {% desired_app_count %}
 }
 variable "docker_image_url_nginx" {
   description = "Docker image to run in the ECS cluster"

@@ -1,0 +1,22 @@
+[
+  {
+    "clbksType": "internet",
+    "clbksId": "i9dD0WDb5-G9FH3ByCYHd",
+    "bindings": [
+      {
+        "id": "dvgj4PIxrjlwW--nkHHcH",
+        "direction": "from"
+      }
+    ]
+  },
+  {
+    "clbksType": "compute",
+    "clbksId": "dvgj4PIxrjlwW--nkHHcH",
+    "bindings": [
+      {
+        "id": "i9dD0WDb5-G9FH3ByCYHd",
+        "direction": "to"
+      }
+    ]
+  }
+]

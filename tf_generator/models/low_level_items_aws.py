@@ -13,6 +13,12 @@ BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 template_loader = S3TemplateLoader()
 
 
+class CloudblocksValidationError(Exception):
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.errors = errors
+
+
 @dataclass
 class TerraformConfig:
     main: Optional[str]
@@ -32,29 +38,28 @@ class LowLevelAWSItem:
         raise NotImplementedError()
 
 
-class LowLevelInfraItem(LowLevelAWSItem):
+class LowLevelSharedItem(LowLevelAWSItem):
     def generate_config(self):
         raise NotImplementedError()
 
 
-class VPC(LowLevelInfraItem):
+class VPC(LowLevelSharedItem):
     pass
 
 
-class ALB(LowLevelInfraItem):
+class ALB(LowLevelSharedItem):
     pass
 
 
-class Cloudfront(LowLevelInfraItem):
+class Cloudfront(LowLevelSharedItem):
     def generate_config(self):
         return TerraformConfig(None, None, None)
 
 
 class LowLevelComputeItem(LowLevelAWSItem):
-    def __init__(self, new_id: str, vpc: VPC, cloudfront: Cloudfront):
+    def __init__(self, new_id: str, vpc: VPC):
         super().__init__(new_id)
         self.vpc: VPC = vpc
-        self.cloudfront: Cloudfront = cloudfront
 
     def generate_config(self):
         raise NotImplementedError()
@@ -78,9 +83,23 @@ class LowLevelDBItem(LowLevelAWSItem):
 
 
 class EC2(LowLevelComputeItem):
-    def __init__(self, new_id, vpc: VPC, cloudfront: Cloudfront):
-        super().__init__(new_id, vpc, cloudfront)
+    def __init__(self, new_id, vpc: VPC):
+        super().__init__(new_id, vpc)
         self.lb: ALB = ALB(generate_id())
+        self.template = load_template("templates/vpc/main.tf.template")
+        self.variables = load_template("templates/ecs/variables.tf.template")
+
+    def generate_config(self) -> TerraformConfig:
+        out_template = ""
+        out_variables = ""
+        out_outputs = ""
+        if self.template:
+            out_template += self.template.render({})
+        if self.variables:
+            out_variables += self.variables.render({})
+        if self.outputs:
+            out_outputs += self.outputs.render({})
+        return TerraformConfig(out_template, out_variables, out_outputs)
 
 
 class RDS(LowLevelDBItem):
@@ -154,3 +173,9 @@ class TerraformGeneratorAWS:
 
 def generate_id() -> str:
     return uuid.uuid4().hex
+
+
+def load_template(path: str) -> Template:
+    with open(path, "r") as f:
+        data = f.read()
+        return Template(data)

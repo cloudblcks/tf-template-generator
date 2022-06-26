@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 
-import click
 import cloup
 from cloup.constraints import mutually_exclusive
 from dotenv import load_dotenv
@@ -85,7 +84,9 @@ def parse(file, data, out, config):
     if file:
         data = load_mapping(file)
 
-    generator = TerraformGenerator()
+    with open(TEMPLATES_MAP_PATH, "r") as f:
+        template_map = json.load(f)
+        generator = TerraformGenerator(template_map)
     templates = generator.generate_template_from_json(data)
     if out:
         template_writer.write(out, data)
