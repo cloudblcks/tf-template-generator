@@ -20,15 +20,15 @@ class CloudSchema(Schema):
         if not cloud_provider:
             cloud_provider = DEFAULT_PROVIDER
 
-        if cloud_provider not in CLOUD_PROVIDER_SETTINGS.keys():
+        if cloud_provider not in CLOUD_PROVIDER_SETTINGS.providers:
             raise SchemaError(
-                f"Cloud provider {cloud_provider} not recognised. Valid clouds: {CLOUD_PROVIDER_SETTINGS.keys()}"
+                f"Cloud provider {cloud_provider} not recognised. Valid clouds: {CLOUD_PROVIDER_SETTINGS.providers}"
             )
 
         if "regions" not in data:
             return data
 
-        cloud_provider_regions = CLOUD_PROVIDER_SETTINGS.get(cloud_provider)["regions"]
+        cloud_provider_regions = CLOUD_PROVIDER_SETTINGS.get(cloud_provider).regions
         invalid_regions = []
         for d in data.get("regions"):
             region = d.get("region")

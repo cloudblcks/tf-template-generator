@@ -1,21 +1,17 @@
 import argparse
 import json
-import os
 
-import click
 import cloup
-from cloup.constraints import mutually_exclusive
-from dotenv import load_dotenv
-
 import schema_validator
 import template_writer
+from cloup.constraints import mutually_exclusive
+from config import TEMPLATES_MAP_PATH
+from dotenv import load_dotenv
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
 from models.s3_templates import ServiceProvider
 
 load_dotenv()
-
-TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 
 def get_parser():
@@ -72,13 +68,7 @@ def cli():
     default=None,
     help="Path to output file (Recommended to use .tf suffix). If none supplied, will print output to stdout",
 )
-@cloup.option(
-    "--config",
-    "-c",
-    default=None,
-    help="Path to configuration python file. (Dangerous, use only to edit default values)",
-)
-def parse(file, data, out, config):
+def parse(file, data, out):
     """
     Generate Terraform configuration from Cloudblocks mapping file
     """

@@ -4,7 +4,7 @@ from typing import Dict, Optional, List
 
 from jinja2 import Template
 
-from main import TEMPLATES_MAP_PATH
+from config import TEMPLATES_MAP_PATH
 from models.high_level_items import (
     HighLevelCompute,
     HighLevelDB,
