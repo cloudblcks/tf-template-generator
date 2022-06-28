@@ -1,7 +1,10 @@
-from enum import Enum
+from enum import Enum, auto
 from typing import List, Union, Dict
 
+from strenum import LowercaseStrEnum
+
 from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem, CloudblocksValidationException
+from models.s3_templates import ServiceProvider
 
 HIGH_LEVEL_ITEM_TYPES = ["compute", "db", "storage", "internet"]
 

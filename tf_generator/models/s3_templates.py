@@ -7,13 +7,7 @@ from strenum import LowercaseStrEnum
 from template_loader import S3TemplateLoader
 
 
-class LowercaseStrEnumGetter(LowercaseStrEnum):
-    @staticmethod
-    def get(key: str) -> "LowercaseStrEnumGetter":
-        return ServiceProvider[key.upper()]
-
-
-class ServiceProvider(LowercaseStrEnumGetter):
+class ServiceProvider(LowercaseStrEnum):
     AWS = auto()
     AZURE = auto()
     GCP = auto()
@@ -29,6 +23,10 @@ class ServiceProvider(LowercaseStrEnumGetter):
             ServiceProvider.HEROKU,
             ServiceProvider.KUBERNETES,
         }
+
+    @staticmethod
+    def get(key: str) -> "ServiceProvider":
+        return ServiceProvider[key.upper()]
 
 
 class ServiceCategory(LowercaseStrEnum):
