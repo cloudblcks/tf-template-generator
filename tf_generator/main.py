@@ -76,6 +76,9 @@ def parse(file, data, out):
     if file:
         data = load_mapping(file)
 
+    if not validate(None, data):
+        pass
+
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
         generator = TerraformGenerator(template_map)
@@ -98,7 +101,12 @@ def parse(file, data, out):
         Path to mapping file, in either JSON or YAML formats
         Valid filetypes: .json .yml .yaml""",
     ),
-    cloup.option("--data", "-d", help="Inline JSON mapping"),
+    cloup.option(
+        "--data",
+        "-d",
+        type=str,
+        help="Inline JSON mapping",
+    ),
     constraint=mutually_exclusive,
 )
 def validate(file, data):
@@ -107,11 +115,16 @@ def validate(file, data):
     """
     if file:
         data = load_mapping(file)
+    else:
+        data = json.loads(data)
 
-    if schema_validator.validate(data):
+    is_valid = schema_validator.validate(data)
+    if is_valid:
         print("Configuration is valid")
     else:
         print("Configuration isn't valid")
+
+    return is_valid
 
 
 @cli.command()
