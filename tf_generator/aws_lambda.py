@@ -6,10 +6,13 @@ from dotenv import load_dotenv
 from generator import TerraformGenerator
 
 load_dotenv()
+TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 
 def lambda_handler(event, context):
-    generator = TerraformGenerator()
+    with open(TEMPLATES_MAP_PATH, "r") as f:
+        template_map = json.load(f)
+        generator = TerraformGenerator(template_map)
     print(json.dumps(event))
     if "queryStringParameters" in event.keys() and event["queryStringParameters"]:
         args = event["queryStringParameters"]

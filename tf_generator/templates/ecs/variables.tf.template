@@ -1,0 +1,74 @@
+###############
+# ECS
+###############
+variable "{{ uid }}_ecs_cluster_name" {
+  description = "Name of the ECS cluster"
+  default     = "{{ uid }}_ecs_cluster"
+}
+
+variable "{{ uid }}_ami" {
+  description = "Which AMI to spawn."
+}
+variable "{{ uid }}_instance_type" {
+  default = "t2.micro"
+}
+
+variable "{{ uid }}_ssh_pubkey_file" {
+  description = "Path to an SSH public key"
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "{{ uid }}_task_definition_family" {
+  description = "A unique name for your task definition"
+  default     = "{{ uid }}_task_definition_family"
+}
+
+variable "{{ uid }}_docker_image_url" {
+  description = "Docker image to run in the ECS cluster"
+}
+
+variable "{{ uid }}_container_cpu" {
+  description = "Number of CPU cores needed"
+  default = 10
+}
+
+variable "{{ uid }}_container_memory" {
+    description = "Amount of memory needed for the container, in MB"
+    default = 512
+}
+
+
+variable "{{ uid }}_desired_app_count" {
+  description = "Number of Docker containers to run"
+  default     = 1
+}
+
+variable "{{ uid }}_docker_image_url_nginx" {
+  description = "Docker image to run in the ECS cluster"
+  default     = "808221725440.dkr.ecr.eu-west-1.amazonaws.com/minerva-nginx:latest"
+}
+
+variable "allowed_hosts" {
+  description = "Domain name for allowed hosts"
+  default     = "cloudblocks.dev"
+}
+
+variable "{{ uid }}_healthcheck_path" {
+    variable = "Healthcheck path"
+}
+
+###############
+# Autoscaling
+###############
+variable "{{ uid }}_autoscale_min" {
+  description = "Minimum autoscale (number of EC2)"
+  default     = "1"
+}
+variable "{{ uid }}_autoscale_max" {
+  description = "Maximum autoscale (number of EC2)"
+  default     = "10"
+}
+variable "{{ uid }}_autoscale_desired" {
+  description = "Desired autoscale (number of EC2)"
+  default     = "4"
+}
