@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
+
+import cdktf
 
 from models.utils import JsonSerialisable
 
 
 @dataclass
-class TerraformAttribute(JsonSerialisable):
+class ResourceParameter(JsonSerialisable):
     name: str
-    value: Union[str, int, List["TerraformAttribute"], Dict]
+    value: Union[str, int, List["ResourceParameter"], Dict]
 
     @classmethod
     def from_dict(cls, d):
@@ -18,7 +20,7 @@ class TerraformAttribute(JsonSerialisable):
 class Provider(JsonSerialisable):
     name: str
     version: str
-    attributes: List[TerraformAttribute]
+    attributes: List[ResourceParameter]
 
     @classmethod
     def from_dict(cls, d):
@@ -33,14 +35,20 @@ class Provider(JsonSerialisable):
 class Resource(JsonSerialisable):
     identifier: str
     block_type: str
-    labels: List[str]  # TODO: Decide if labels should be flat or linked tree
-    attributes: List[TerraformAttribute]
+    tags: List[str]  # TODO: Decide if labels should be flat or linked tree
+    parameters: List[ResourceParameter]
+    tf_type: Optional[cdktf.Resource]
 
     @classmethod
     def from_dict(cls, d):
+        tf_type = None
         return cls(
             identifier=d["identifier"],
-            block_type=d["block_type"],
-            labels=d["labels"],
-            attributes=[a.from_dict() for a in d["attributes"]],
+            block_type=d["type"],
+            tags=d["tags"],
+            parameters=[ResourceParameter(key, value) for key, value in d["params"].items()],
+            tf_type=tf_type,
         )
+
+    def validate(self) -> bool:
+        return True

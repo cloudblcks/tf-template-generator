@@ -2,7 +2,7 @@ import json
 from typing import List
 
 import pytest
-from models.tf_blocks import Resource, TerraformAttribute
+from models.mapping_blocks import Resource, ResourceParameter
 
 # fmt: off
 
@@ -18,10 +18,10 @@ TEST_DATA_ATTRIBUTES = [
 TEST_DATA_RESOURCES = [
     ("foo", "resource", ["lorem", "ipsum"], [],
      {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"], "attributes": []}),
-    ("foo", "resource", ["lorem", "ipsum"], [TerraformAttribute("foo", "bar")],
+    ("foo", "resource", ["lorem", "ipsum"], [ResourceParameter("foo", "bar")],
      {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"],
       "attributes": [{"name": "foo", "value": "bar"}]}),
-    ("foo", "resource", ["lorem", "ipsum"], [TerraformAttribute("foo", "bar"), TerraformAttribute("lorem", "ipsum")],
+    ("foo", "resource", ["lorem", "ipsum"], [ResourceParameter("foo", "bar"), ResourceParameter("lorem", "ipsum")],
      {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"],
       "attributes": [{"name": "foo", "value": "bar"}, {"name": "lorem", "value": "ipsum"}]}),
 ]
@@ -31,8 +31,8 @@ TEST_DATA_RESOURCES = [
 
 
 @pytest.mark.parametrize("name,value,expected", TEST_DATA_ATTRIBUTES)
-def test_tf_attribute_json_serialisation(name, value, expected):
-    attribute = TerraformAttribute(name, value)
+def test_resource_param_json_serialisation(name, value, expected):
+    attribute = ResourceParameter(name, value)
     assert attribute.to_dict() == expected
     assert attribute.to_json() == json.dumps(expected)
 
@@ -42,7 +42,7 @@ def test_resource_json_serialisation(
     identifier: str,
     block_type: str,
     labels: List[str],
-    attributes: List[TerraformAttribute],
+    attributes: List[ResourceParameter],
     expected,
 ):
     block = Resource(identifier, block_type, labels, attributes)

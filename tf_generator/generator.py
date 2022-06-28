@@ -3,12 +3,14 @@ from typing import Dict, Optional, List, Set
 
 from jinja2 import Template
 
+from config import TEMPLATES_MAP_PATH
 from models.high_level_items import (
     HighLevelCompute,
     HighLevelDB,
     HighLevelInternet,
     HighLevelStorage,
     HighLevelItem,
+    HighLevelItemType,
     HighLevelBinding,
     HighLevelBindingDirection,
     HighLevelItemTypes,

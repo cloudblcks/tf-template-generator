@@ -1,18 +1,34 @@
 from dataclasses import dataclass
 from enum import auto
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Set, Union
 
 from models.utils import JsonSerialisable
 from strenum import LowercaseStrEnum
 from template_loader import S3TemplateLoader
 
 
-class ServiceProvider(LowercaseStrEnum):
+class LowercaseStrEnumGetter(LowercaseStrEnum):
+    @staticmethod
+    def get(key: str) -> "LowercaseStrEnumGetter":
+        return ServiceProvider[key.upper()]
+
+
+class ServiceProvider(LowercaseStrEnumGetter):
     AWS = auto()
-    GCP = auto()
     AZURE = auto()
-    KUBERNETES = auto()
+    GCP = auto()
     HEROKU = auto()
+    KUBERNETES = auto()
+
+    @staticmethod
+    def all() -> Set["ServiceProvider"]:
+        return {
+            ServiceProvider.AWS,
+            ServiceProvider.AZURE,
+            ServiceProvider.GCP,
+            ServiceProvider.HEROKU,
+            ServiceProvider.KUBERNETES,
+        }
 
 
 class ServiceCategory(LowercaseStrEnum):

@@ -1,20 +1,18 @@
 import argparse
 import json
-import os
+from typing import Optional, List
 
 import cloup
-from cloup.constraints import mutually_exclusive
-from dotenv import load_dotenv
-
 import schema_validator
 import template_writer
+from cloup.constraints import mutually_exclusive
+from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
+from dotenv import load_dotenv
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
 from models.s3_templates import ServiceProvider
 
 load_dotenv()
-
-TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 
 def get_parser():
@@ -71,13 +69,7 @@ def cli():
     default=None,
     help="Path to output file (Recommended to use .tf suffix). If none supplied, will print output to stdout",
 )
-@cloup.option(
-    "--config",
-    "-c",
-    default=None,
-    help="Path to configuration python file. (Dangerous, use only to edit default values)",
-)
-def parse(file, data, out, config):
+def parse(file, data, out):
     """
     Generate Terraform configuration from Cloudblocks mapping file
     """
@@ -102,8 +94,9 @@ def parse(file, data, out, config):
     cloup.option(
         "--file",
         "-f",
-        help="""Path to mapping file, in either JSON or YAML formats
-    Valid filetypes: .json .yml .yaml""",
+        help="""
+        Path to mapping file, in either JSON or YAML formats
+        Valid filetypes: .json .yml .yaml""",
     ),
     cloup.option("--data", "-d", help="Inline JSON mapping"),
     constraint=mutually_exclusive,
@@ -119,6 +112,52 @@ def validate(file, data):
         print("Configuration is valid")
     else:
         print("Configuration isn't valid")
+
+
+@cli.command()
+@cloup.argument(
+    "keyword",
+    type=str,
+    help="Search for any resources that mention given keyword",
+    required=False,
+)
+@cloup.option(
+    "--cloud",
+    "-c",
+    type=str,
+    help="Filter for resources within specific cloud provider",
+)
+@cloup.option(
+    "tags",
+    "--tag",
+    "-t",
+    type=str,
+    help="Filter for resources with specific tag",
+    multiple=True,
+)
+@cloup.option(
+    "print_list",
+    "--list",
+    "-l",
+    is_flag=True,
+    default=False,
+    help="Only list resource keys rather than details",
+)
+def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]], print_list: bool = False):
+    """
+    List supported resources
+    """
+    try:
+        results = RESOURCE_SETTINGS.search(keyword, cloud, tags)
+    except KeyError as e:
+        print(e)
+        return -1
+
+    for resource in results:
+        if print_list:
+            print(resource.key)
+        else:
+            print(resource.to_yaml())
 
 
 if __name__ == "__main__":

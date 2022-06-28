@@ -6,10 +6,10 @@ from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem, Clo
 HIGH_LEVEL_ITEM_TYPES = ["compute", "db", "storage", "internet"]
 
 
-class HighLevelBindingDirection(Enum):
-    TO = 0
-    FROM = 1
-    BOTH = 2
+class HighLevelBindingDirection(LowercaseStrEnum):
+    TO = auto()
+    FROM = auto()
+    BOTH = auto()
 
     @staticmethod
     def match_string(string: str) -> "HighLevelBindingDirection":
@@ -20,6 +20,9 @@ class HighLevelBindingDirection(Enum):
         elif string == "both":
             return HighLevelBindingDirection.BOTH
         raise CloudblocksValidationException("Unsupported binding direction")
+
+
+HIGH_LEVEL_BINDING_DIRECTIONS = [x for x in HighLevelBindingDirection]
 
 
 class HighLevelItem:
