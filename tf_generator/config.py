@@ -1,6 +1,13 @@
+import json
 import os
 
 import boto3
+
+from models.provider_config import CloudConfig
+from models.tf_type_mapping import ResourceMap
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 AWS_REGION = "us-west-1"
 
@@ -9,6 +16,16 @@ GENERATED_TF_BUCKET = "cloudblocks-generated-tf"
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_KEY")
+
+TEMPLATES_MAP_PATH = os.path.join(BASE_DIR, "data", "templates_map.json")
+
+_CLOUD_PROVIDER_CONFIG_PATH = os.path.join(BASE_DIR, "data", "cloud_providers.json")
+with open(_CLOUD_PROVIDER_CONFIG_PATH, "r") as f:
+    CLOUD_PROVIDER_SETTINGS = CloudConfig.from_dict(json.load(f))
+
+_CLOUD_RESOURCES_CONFIG_PATH = os.path.join(BASE_DIR, "data", "resources.json")
+with open(_CLOUD_RESOURCES_CONFIG_PATH, "r") as f:
+    RESOURCE_SETTINGS = ResourceMap.from_dict(json.load(f))
 
 
 def get_aws_secret(var_key):

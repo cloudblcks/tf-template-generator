@@ -1,0 +1,4 @@
+resource "aws_s3_bucket" "{{ uid }}_bucket" {
+  bucket = var.{{ uid }}_bucket_name
+}
+

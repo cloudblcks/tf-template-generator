@@ -1,0 +1,50 @@
+[
+  {
+    "clbksType": "internet",
+    "clbksId": "1",
+    "bindings": [
+      {
+        "id": "2",
+        "direction": "from"
+      }
+    ]
+  },
+  {
+    "clbksType": "compute",
+    "clbksId": "2",
+    "bindings": [
+      {
+        "id": "1",
+        "direction": "to"
+      },
+      {
+        "id": "3",
+        "direction": "both"
+      }
+    ]
+  },
+  {
+    "clbksType": "compute",
+    "clbksId": "3",
+    "bindings": [
+      {
+        "id": "4",
+        "direction": "to"
+      },
+      {
+        "id": "2",
+        "direction": "both"
+      }
+    ]
+  },
+  {
+    "clbksType": "storage",
+    "clbksId": "4",
+    "bindings": [
+      {
+        "id": "3",
+        "direction": "from"
+      }
+    ]
+  }
+]

@@ -2,11 +2,11 @@ import io
 
 import boto3
 
-import config
-
 
 class S3TemplateLoader:
     def __init__(self, bucket: str = None):
+        import config  # Avoiding circular dependency
+
         self.s3 = boto3.resource(
             "s3",
             region_name=config.AWS_REGION,

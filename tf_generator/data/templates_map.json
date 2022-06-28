@@ -60,5 +60,15 @@
         "variables_uri": "static/s3/variables.tf"
       }
     }
+  },
+  "low_level": {
+    "aws": {
+      "vpc": {
+        "service_name": "AWS VPC",
+        "uri": "low_level/vpc/main.tf",
+        "outputs_uri": null,
+        "variables_uri": "static/s3/variables.tf"
+      }
+    }
   }
 }
