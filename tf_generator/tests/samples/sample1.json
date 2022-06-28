@@ -1,21 +1,49 @@
 [
   {
     "clbksType": "internet",
-    "clbksId": "i9dD0WDb5-G9FH3ByCYHd",
+    "clbksId": "1",
     "bindings": [
       {
-        "id": "dvgj4PIxrjlwW--nkHHcH",
+        "id": "2",
         "direction": "from"
       }
     ]
   },
   {
     "clbksType": "compute",
-    "clbksId": "dvgj4PIxrjlwW--nkHHcH",
+    "clbksId": "2",
     "bindings": [
       {
-        "id": "i9dD0WDb5-G9FH3ByCYHd",
+        "id": "1",
         "direction": "to"
+      },
+      {
+        "id": "3",
+        "direction": "both"
+      }
+    ]
+  },
+  {
+    "clbksType": "compute",
+    "clbksId": "3",
+    "bindings": [
+      {
+        "id": "4",
+        "direction": "to"
+      },
+      {
+        "id": "2",
+        "direction": "both"
+      }
+    ]
+  },
+  {
+    "clbksType": "storage",
+    "clbksId": "4",
+    "bindings": [
+      {
+        "id": "3",
+        "direction": "from"
       }
     ]
   }

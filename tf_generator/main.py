@@ -89,9 +89,9 @@ def parse(file, data, out, config):
         generator = TerraformGenerator(template_map)
     templates = generator.generate_template_from_json(data)
     if out:
-        template_writer.write(out, data)
+        template_writer.write(out, templates)
     else:
-        print(data)
+        print(templates)
 
     return templates
 

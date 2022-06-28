@@ -1,19 +1,9 @@
-from abc import abstractmethod
-from enum import Enum, auto
+from enum import Enum
+from typing import List, Union, Dict
 
-from strenum import LowercaseStrEnum
+from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem, CloudblocksValidationException
 
-from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem
-
-
-class HighLevelItemType(LowercaseStrEnum):
-    COMPUTE = auto()
-    DB = auto()
-    STORAGE = auto()
-    INTERNET = auto()
-
-
-HIGH_LEVEL_ITEM_TYPES = [x for x in HighLevelItemType]
+HIGH_LEVEL_ITEM_TYPES = ["compute", "db", "storage", "internet"]
 
 
 class HighLevelBindingDirection(Enum):
@@ -29,55 +19,52 @@ class HighLevelBindingDirection(Enum):
             return HighLevelBindingDirection.FROM
         elif string == "both":
             return HighLevelBindingDirection.BOTH
+        raise CloudblocksValidationException("Unsupported binding direction")
 
 
 class HighLevelItem:
-    def __init__(self, _id: str, bindings: ["HighLevelBinding"] = None):
+    def __init__(self, uid: str, bindings: List["HighLevelBinding"] = None):
         if bindings is None:
             bindings = []
-        self._id: str = _id
-        self.bindings: ["HighLevelItem"] = bindings
+        self.uid: str = uid
+        self.bindings = bindings
 
     def needs_internet(self) -> bool:
-        for _, item in self.bindings:
-            if item.gettype == HighLevelItemType.INTERNET:
+        for item in self.bindings:
+            if isinstance(item.item, HighLevelInternet):
                 return True
         return False
 
-    def linked_compute(self, input_map: {str: LowLevelAWSItem}) -> [LowLevelComputeItem]:
+    def linked_compute(self, input_map: Dict[str, LowLevelAWSItem]) -> List[LowLevelComputeItem]:
         out = []
-
-        for x in self.bindings.values():
-            if x.gettype == HighLevelItemType.COMPUTE and x._id in list(input_map):
-                out.append(input_map[x._id])
+        for x in self.bindings:
+            if isinstance(x.item, HighLevelCompute) and x.item.uid in list(input_map):
+                item = input_map[x.item.uid]
+                assert isinstance(item, LowLevelComputeItem)
+                out.append(item)
         return out
-
-    @abstractmethod
-    def gettype(self) -> HighLevelItemType:
-        raise NotImplementedError()
 
 
 class HighLevelCompute(HighLevelItem):
-    def gettype(self) -> HighLevelItemType:
-        return HighLevelItemType.COMPUTE
+    pass
 
 
 class HighLevelDB(HighLevelItem):
-    def gettype(self) -> HighLevelItemType:
-        return HighLevelItemType.DB
+    pass
 
 
 class HighLevelStorage(HighLevelItem):
-    def gettype(self) -> HighLevelItemType:
-        return HighLevelItemType.STORAGE
+    pass
 
 
 class HighLevelInternet(HighLevelItem):
-    def gettype(self) -> HighLevelItemType:
-        return HighLevelItemType.INTERNET
+    pass
+
+
+HighLevelItemTypes = Union[HighLevelStorage, HighLevelCompute, HighLevelDB, HighLevelInternet]
 
 
 class HighLevelBinding:
-    def __init__(self, item: HighLevelItem, direction: HighLevelBindingDirection):
+    def __init__(self, item: HighLevelItemTypes, direction: HighLevelBindingDirection):
         self.item = item
         self.direction = direction

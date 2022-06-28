@@ -1,50 +1,246 @@
-resource "aws_ecs_cluster" {% cluster_name %} {
-  name = "${var.ecs_cluster_name}-cluster"
+resource "aws_ecs_cluster" "{{ uid }}_ecs_cluster_name" {
+  name = var.{{ uid }}_ecs_cluster_name
 }
 
+# ALB Security Group (Traffic Internet -> ALB)
+resource "aws_security_group" "{{ uid }}_load-balancer" {
+  description = "Controls access to the ALB"
+  vpc_id      = aws_vpc.{{ vpc_uid }}-vpc.id
 
-resource "aws_launch_configuration" "ecs" {
-  name                        = "${var.ecs_cluster_name}-cluster"
-  image_id                    = lookup(var.amis, var.region)
-  instance_type               = var.instance_type
-  security_groups             = [aws_security_group.ecs.id]
-  iam_instance_profile        = aws_iam_instance_profile.ecs.name
-  key_name                    = aws_key_pair.production.key_name
-  associate_public_ip_address = true
-  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${var.ecs_cluster_name}-cluster' > /etc/ecs/ecs.config"
-}
-
-
-resource "aws_ecs_task_definition" "app" {
-  family                = "minerva-django"
-  container_definitions = templatefile("templates/minerva_django.tftpl", {
-    docker_image_url_django = var.docker_image_url_django
-    docker_image_url_nginx  = var.docker_image_url_nginx
-    region                  = var.region
-    rds_db_name             = var.rds_db_name
-    rds_username            = var.rds_username
-    rds_password            = var.rds_password
-    rds_hostname            = aws_db_instance.production.address
-    allowed_hosts           = var.allowed_hosts
-  })
-  volume {
-    name      = "static_volume"
-    host_path = "/src/minerva/static/"
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  depends_on = [aws_db_instance.production]
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
-resource "aws_ecs_service" "production" {
-  name            = "${var.ecs_cluster_name}-service"
-  cluster         = aws_ecs_cluster.production.id
-  task_definition = aws_ecs_task_definition.app.arn
-  iam_role        = aws_iam_role.ecs-service-role.arn
-  desired_count   = var.app_count
-  depends_on      = [aws_alb_listener.ecs-alb-http-listener, aws_iam_role_policy.ecs-service-role-policy]
+# ECS Security group (traffic ALB -> ECS, ssh -> ECS)
+resource "aws_security_group" "{{ uid }}_ecs" {
+  description = "Allows inbound access from the ALB only"
+  vpc_id      = aws_vpc.{{  vpc_uid }}_vpc.id
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.{{ uid }}_load-balancer.id]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
+  assume_role_policy =<<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": [
+          "ecs.amazonaws.com",
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+  EOT
+}
+
+resource "aws_iam_instance_profile" "{{ uid }}_ecs_instance_profile" {
+  path = "/"
+  role = aws_iam_role.{{ uid }}_ecs-host-role.name
+}
+
+resource "aws_key_pair" "{{ uid }}_ssh_key" {
+  public_key = file(var.{{ uid }}_ssh_pubkey_file)
+}
+
+resource "aws_launch_configuration" "{{ uid }}_ecs_launch_configuration" {
+  name                        = var.{{ uid }}_ecs_cluster_name
+  image_id                    = var.{{ uid }}_ami
+  instance_type               = var.{{ uid }}_instance_type
+  security_groups             = [aws_security_group.{{ uid }}_ecs.id]
+  iam_instance_profile        = aws_iam_instance_profile.{{ uid }}_ecs_instance_profile.name
+  key_name                    = aws_key_pair.{{ uid }}_ssh_key.key_name
+  associate_public_ip_address = true
+  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${var.{{ uid }}_ecs_cluster_name}' > /etc/ecs/ecs.config"
+}
+
+
+resource "aws_ecs_task_definition" "{{ uid }}_task_definition" {
+  family                = var.{{ uid }}_task_definition_family
+  container_definitions = <<EOT
+  [
+  {
+    "name": "${var.{{ uid }}_container_name}",
+    "image": "${var.{{ uid }}_docker_image_url_django}",
+    "essential": true,
+    "cpu": $var.{{ uid }}_container_cpu,
+    "memory": $var.{{ uid }}_container_cpu,
+    "links": [],
+    "portMappings": [/*
+      {
+        "containerPort": 8000,
+        "hostPort": 0,
+        "protocol": "tcp"
+      }
+    */],
+    "environment": [],
+    "mountPoints": [/*
+      {
+        "containerPath": "/usr/src/minerva/static",
+        "sourceVolume": "static_volume"
+      }
+    */],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/${var.{{ uid }}_container_name}",
+        "awslogs-region": "${region}",
+        "awslogs-stream-prefix": "${var.{{ uid }}_container_name}_log_stream"
+      }
+    }
+  }
+]
+  EOT
+  volume {
+    name      = "${var.{{ uid }}_container_volume_name}"
+    host_path = "${var.{{ uid }}_container_volume_path}"
+  }
+}
+
+resource "aws_iam_role" "{{ uid }}_ecs-service-role" {
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": [
+          "ecs.amazonaws.com",
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+  EOT
+}
+
+resource "aws_iam_role_policy" "{{ uid }}_ecs-service-role-policy" {
+  policy = <<EOT
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "ec2:Describe*",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:DeregisterTargets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+  EOT
+
+  role   = aws_iam_role.{{ uid }}_ecs-service-role.id
+}
+
+
+# Production Load Balancer
+resource "aws_lb" "{{ uid }}_aws_alb" {
+  load_balancer_type = "application"
+  internal           = false
+  security_groups    = [aws_security_group.{{ uid }}_load-balancer.id]
+  subnets            = [aws_subnet.{{ vpc_uid }}_public-subnet-1.id, aws_subnet.{{ vpc_uid }}_public-subnet-2.id]
+}
+
+/*data "aws_acm_certificate" "ssl_certificate" {
+  domain   = var.domain_name
+}*/
+
+# Target group
+resource "aws_alb_target_group" "{{ uid }}_default-target-group" {
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.{{ vpc_uid }}-vpc.id
+
+  health_check {
+    path                = var.{{ uid }}_healthcheck_path
+    port                = "traffic-port"
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    timeout             = 2
+    interval            = 5
+    matcher             = "200"
+  }
+}
+
+
+# Listener (redirects traffic from the load balancer to the target group)
+resource "aws_alb_listener" "{{ uid }}_ecs-alb-http-listener" {
+  load_balancer_arn = aws_lb.{{ uid }}_aws_alb.id
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+#  certificate_arn   = data.aws_acm_certificate.ssl_certificate.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_alb_target_group.{{ uid }}_default-target-group.arn
+  }
+}
+
+
+resource "aws_ecs_service" "{{ uid }}_ecs_service" {
+  cluster         = aws_ecs_cluster.{{ uid }}_ecs_cluster_name.id
+  task_definition = aws_ecs_task_definition.{{ uid }}_task_definition.arn
+  iam_role        = aws_iam_role.{{ uid }}_ecs-service-role.arn
+  desired_count   = var.{{ uid }}_app_count
+  depends_on      = [aws_alb_listener.{{ uid }}_ecs-alb-http-listener, aws_iam_role_policy.{{ uid }}_ecs-service-role-policy]
 
   load_balancer {
-    target_group_arn = aws_alb_target_group.default-target-group.arn
-    container_name   = "minerva-nginx"
+    target_group_arn = aws_alb_target_group.{{ uid }}_default-target-group.arn
+    container_name   = var.{{ uid }}_container_name
     container_port   = 80
   }
 }
@@ -53,12 +249,11 @@ resource "aws_ecs_service" "production" {
 ###############
 # Autoscaling
 ###############
-resource "aws_autoscaling_group" "ecs-cluster" {
-  name                 = "${var.ecs_cluster_name}_auto_scaling_group"
-  min_size             = var.autoscale_min
-  max_size             = var.autoscale_max
-  desired_capacity     = var.autoscale_desired
+resource "aws_autoscaling_group" "{{ uid }}_autoscaling_group" {
+  min_size             = var.{{ uid }}_autoscale_min
+  max_size             = var.{{ uid }}_autoscale_max
+  desired_capacity     = var.{{ uid }}_autoscale_desired
   health_check_type    = "EC2"
-  launch_configuration = aws_launch_configuration.ecs.name
-  vpc_zone_identifier  = [aws_subnet.private-subnet-1.id, aws_subnet.private-subnet-2.id]
+  launch_configuration = aws_launch_configuration.{{ uid }}_ecs_launch_configuration.name
+  vpc_zone_identifier  = [aws_subnet.{{ vpc_uid }}_private-subnet-1.id, aws_subnet.{{ vpc_uid }}_private-subnet-2.id]
 }
