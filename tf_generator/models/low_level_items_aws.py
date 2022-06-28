@@ -119,9 +119,13 @@ class EC2Docker(LowLevelComputeItem):
         out_template = ""
         out_variables = ""
         if self.template:
-            out_template = self.template.render({"uid": self.uid, "vpc_uid": self.vpc.uid})
+            out_template = self.template.render(
+                {"uid": self.uid, "vpc_uid": self.vpc.uid, "s3_buckets": self.linked_storage}
+            )
         if self.variables:
-            out_variables = self.variables.render({"uid": self.uid, "vpc_uid": self.vpc.uid})
+            out_variables = self.variables.render(
+                {"uid": self.uid, "vpc_uid": self.vpc.uid, "s3_buckets": self.linked_storage}
+            )
         return TerraformConfig(out_template, out_variables, "")
 
 

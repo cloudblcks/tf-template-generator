@@ -73,6 +73,28 @@ resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
   ]
 }
   EOT
+{% if s3_buckets|length > 0  %}
+  inline_policy {
+    name = "{{ uid }}_ecs-host-role-inline-policy"
+
+    policy =<<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": ["s3:ListBucket", "s3:*Object"],
+        "Resource": [
+        {% for bucket in s3_buckets %}
+        "${aws_s3_bucket.{{ bucket.uid }}_bucket.arn}",
+        {% endfor %}
+        ]
+    }
+  ]
+}
+  EOT
+  }
+  {% endif %}
 }
 
 resource "aws_iam_instance_profile" "{{ uid }}_ecs_instance_profile" {

@@ -3,14 +3,12 @@ from typing import Dict, Optional, List, Set
 
 from jinja2 import Template
 
-from config import TEMPLATES_MAP_PATH
 from models.high_level_items import (
     HighLevelCompute,
     HighLevelDB,
     HighLevelInternet,
     HighLevelStorage,
     HighLevelItem,
-    HighLevelItemType,
     HighLevelBinding,
     HighLevelBindingDirection,
     HighLevelItemTypes,
@@ -163,7 +161,8 @@ class TerraformGenerator:
             needs_internet_access = True
         vpc: Optional[VPC] = None
         for item in (x for x in compute.bindings if isinstance(x.item, HighLevelCompute)):
-            if linked_compute := self.ll_map[item.item.uid]:
+            if item.item.uid in self.ll_map:
+                linked_compute = self.ll_map[item.item.uid]
                 assert isinstance(linked_compute, LowLevelComputeItem)
                 vpc = linked_compute.vpc
                 break
@@ -172,7 +171,7 @@ class TerraformGenerator:
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in compute.bindings if isinstance(x.item, HighLevelStorage)):
-            if storage := self.ll_map[item.item.uid]:
+            if storage := self.ll_map.get(item.item.uid):
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
             else:
@@ -197,29 +196,26 @@ class TerraformGenerator:
 
 
 def json_to_high_level_list(json_arr: List[Dict]) -> List[HighLevelItemTypes]:
-    out: List[HighLevelItemTypes] = []
+    temp: Dict[str, HighLevelItemTypes] = {}
     for item in json_arr:
-        new_item: Optional[HighLevelItemTypes] = None
         item_type = item["clbksType"]
-        _id = item["clbksId"]
-        bindings = item["bindings"]
+        uid = item["clbksId"]
         if item_type == "compute":
-            new_item = HighLevelCompute(_id)
+            temp[uid] = HighLevelCompute(uid)
         elif item_type == "internet":
-            new_item = HighLevelInternet(_id)
+            temp[uid] = HighLevelInternet(uid)
         elif item_type == "db":
-            new_item = HighLevelDB(_id)
+            temp[uid] = HighLevelDB(uid)
         elif item_type == "storage":
-            new_item = HighLevelStorage(_id)
-        if new_item:
-            for binding in bindings:
+            temp[uid] = HighLevelStorage(uid)
+    for item in json_arr:
+        if new_item := temp[item["clbksId"]]:
+            for binding in item["bindings"]:
                 binding_id = binding["id"]
                 direction = HighLevelBindingDirection.match_string(binding["direction"])
-                for el in out:
-                    if el.uid == binding_id:
-                        new_item.bindings.append(HighLevelBinding(el, direction))
-            out.append(new_item)
-    return out
+                el = temp[binding_id]
+                new_item.bindings.append(HighLevelBinding(el, direction))
+    return list(temp.values())
 
 
 def is_internet_needed(input_arr: List[HighLevelItem]) -> bool:

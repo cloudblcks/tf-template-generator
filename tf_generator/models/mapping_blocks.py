@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Union, Optional
-
-import cdktf
+from typing import Dict, List, Union
 
 from models.utils import JsonSerialisable
 
@@ -37,7 +35,8 @@ class Resource(JsonSerialisable):
     block_type: str
     tags: List[str]  # TODO: Decide if labels should be flat or linked tree
     parameters: List[ResourceParameter]
-    tf_type: Optional[cdktf.Resource]
+
+    # tf_type: Optional[cdktf.Resource]
 
     @classmethod
     def from_dict(cls, d):
@@ -47,7 +46,7 @@ class Resource(JsonSerialisable):
             block_type=d["type"],
             tags=d["tags"],
             parameters=[ResourceParameter(key, value) for key, value in d["params"].items()],
-            tf_type=tf_type,
+            # tf_type=tf_type,
         )
 
     def validate(self) -> bool:
