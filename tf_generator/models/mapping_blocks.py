@@ -35,12 +35,10 @@ class Resource(JsonSerialisable):
     block_type: str
     tags: List[str]  # TODO: Decide if labels should be flat or linked tree
     parameters: List[ResourceParameter]
-
     # tf_type: Optional[cdktf.Resource]
 
     @classmethod
     def from_dict(cls, d):
-        tf_type = None
         return cls(
             identifier=d["identifier"],
             block_type=d["type"],

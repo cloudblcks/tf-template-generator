@@ -167,16 +167,6 @@ class ServiceCategories(JsonSerialisable):
             **{str(key): value.to_dict() for key, value in self.provider_services.items()},
         }
 
-    def load_all(self):
-        loader = S3TemplateLoader()
-
-        for provider in self.providers.values():
-            provider.load(loader)
-        for service_type in self.provider_services.values():
-            for service in service_type.services.values():
-                for template in service.templates.values():
-                    template.load(loader)
-
     def get(
         self,
         category: ServiceCategory,
