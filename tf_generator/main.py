@@ -1,11 +1,12 @@
 import argparse
 import json
+from typing import Optional, List
 
 import cloup
 import schema_validator
 import template_writer
 from cloup.constraints import mutually_exclusive
-from config import TEMPLATES_MAP_PATH
+from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
 from dotenv import load_dotenv
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
@@ -91,8 +92,9 @@ def parse(file, data, out):
     cloup.option(
         "--file",
         "-f",
-        help="""Path to mapping file, in either JSON or YAML formats
-    Valid filetypes: .json .yml .yaml""",
+        help="""
+        Path to mapping file, in either JSON or YAML formats
+        Valid filetypes: .json .yml .yaml""",
     ),
     cloup.option("--data", "-d", help="Inline JSON mapping"),
     constraint=mutually_exclusive,
@@ -108,6 +110,38 @@ def validate(file, data):
         print("Configuration is valid")
     else:
         print("Configuration isn't valid")
+
+
+@cli.command()
+@cloup.argument(
+    "keyword",
+    type=str,
+    help="Search for any resources that mention given keyword",
+    required=False,
+)
+@cloup.option(
+    "--cloud",
+    "-c",
+    type=str,
+    help="Filter for resources within specific cloud provider",
+)
+@cloup.option(
+    "tags",
+    "--tag",
+    "-t",
+    type=str,
+    help="Filter for resources with specific tag",
+    multiple=True,
+)
+def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]]):
+    try:
+        results = RESOURCE_SETTINGS.search(keyword, cloud, tags)
+    except KeyError as e:
+        print(e)
+        return -1
+
+    for resource in results:
+        print(resource.to_json(pretty=True))
 
 
 if __name__ == "__main__":

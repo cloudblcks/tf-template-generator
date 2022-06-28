@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import auto
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Set, Union
 
 from models.utils import JsonSerialisable
 from strenum import LowercaseStrEnum
@@ -9,6 +9,7 @@ from template_loader import S3TemplateLoader
 
 class ServiceProvider(LowercaseStrEnum):
     AWS = auto()
+    AZURE = auto()
     GCP = auto()
     AZURE = auto()
     KUBERNETES = auto()

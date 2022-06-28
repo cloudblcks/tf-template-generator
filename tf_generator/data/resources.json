@@ -1,0 +1,51 @@
+[
+  {
+    "key": "s3",
+    "clouds": [
+      "aws"
+    ],
+    "tags": [
+      "storage",
+      "aws-only"
+    ],
+    "description": "Amazon Web Services static storage",
+    "params": [
+      {
+        "param": "bucket_name",
+        "description": "Unique identifier for the bucket. Must be unique across all AWS accounts",
+        "data_type": "string"
+      }
+    ]
+  },
+  {
+    "key": "docker",
+    "aliases": [
+      "docker-container",
+      "docker-stateful"
+    ],
+    "clouds": [
+      "all"
+    ],
+    "tags": [
+      "compute",
+      "cloud-agnostic",
+      "serverless"
+    ],
+    "description": "Generic docker container running in the cloud"
+  },
+  {
+    "key": "postgresql",
+    "aliases": [
+      "postgres"
+    ],
+    "clouds": [
+      "all"
+    ],
+    "tags": [
+      "database",
+      "rdbms",
+      "sql"
+    ],
+    "description": "Open source relational database (SQL-RDBMS)"
+  }
+]
