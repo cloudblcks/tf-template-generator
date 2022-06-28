@@ -73,9 +73,6 @@ def test_resource_map_getter(test_data: Dict, resource_map: ResourceMap):
     "search_params,expected_keys",
     [
         pytest.param({}, ["bigtable", "docker", "postgresql", "s3"], id="test_no_keyword"),
-        pytest.param(
-            {"keyword": "*"}, ["bigtable", "docker", "postgresql", "s3"], id="test_wildcard_asterisk_keyword"
-        ),
         pytest.param({"keyword": "docker"}, ["docker"], id="test_search_by_key"),
         pytest.param({"keyword": "docker-container"}, ["docker"], id="test_search_by_alias"),
         pytest.param({"keyword": "Generic docker"}, ["docker"], id="test_search_by_keyword_in_description"),

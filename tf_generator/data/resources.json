@@ -5,8 +5,7 @@
       "aws"
     ],
     "tags": [
-      "storage",
-      "aws-only"
+      "storage"
     ],
     "description": "Amazon Web Services static storage",
     "params": [
@@ -19,27 +18,19 @@
   },
   {
     "key": "docker",
-    "aliases": [
-      "docker-container",
-      "docker-stateful"
-    ],
     "clouds": [
-      "all"
+      "aws"
     ],
     "tags": [
       "compute",
-      "cloud-agnostic",
-      "serverless"
+      "cloud-agnostic"
     ],
     "description": "Generic docker container running in the cloud"
   },
   {
     "key": "postgresql",
-    "aliases": [
-      "postgres"
-    ],
     "clouds": [
-      "all"
+      "aws"
     ],
     "tags": [
       "database",

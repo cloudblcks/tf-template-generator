@@ -5,8 +5,6 @@ from typing import Dict, List, Optional, Union
 from models.s3_templates import ServiceProvider
 from models.utils import JsonSerialisable
 
-_FILTER_WILDCARDS = ["*"]
-
 
 @dataclass
 class ResourceDetails(JsonSerialisable):
@@ -49,15 +47,17 @@ class ResourceDetails(JsonSerialisable):
     def __repr__(self):
         return self.to_json()
 
-    # def to_dict(self) -> Dict:
-    #     return {
-    #         "key": self.key,
-    #         "aliases": self.aliases,
-    #         "tags": self.tags,
-    #         "clouds": self.clouds,
-    #         "description": self.description,
-    #         "params": self.params,
-    #     }
+    def to_dict(self) -> Dict:
+        return {
+            self.key: {
+                "aliases": self.aliases,
+                "tags": self.tags,
+                "clouds": [c.value for c in self.clouds],
+                "description": self.description,
+                "params": self.params,
+            }
+        }
+
     @property
     def keys(self):
         return self.aliases + [self.key]
@@ -118,7 +118,7 @@ class ResourceMap(JsonSerialisable):
     def _filter_resources(self, keyword, cloud, tags):
         results = self.resources
 
-        if keyword and keyword not in _FILTER_WILDCARDS:
+        if keyword:
             keyword = keyword.lower()
             results = filter(lambda x: ResourceDetails.matches_keyword(x, keyword), self.resources)
 

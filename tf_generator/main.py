@@ -133,7 +133,18 @@ def validate(file, data):
     help="Filter for resources with specific tag",
     multiple=True,
 )
-def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]]):
+@cloup.option(
+    "print_list",
+    "--list",
+    "-l",
+    is_flag=True,
+    default=False,
+    help="Only list resource keys rather than details",
+)
+def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]], print_list: bool = False):
+    """
+    List supported resources
+    """
     try:
         results = RESOURCE_SETTINGS.search(keyword, cloud, tags)
     except KeyError as e:
@@ -141,7 +152,10 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
         return -1
 
     for resource in results:
-        print(resource.to_json(pretty=True))
+        if print_list:
+            print(resource.key)
+        else:
+            print(resource.to_yaml())
 
 
 if __name__ == "__main__":
