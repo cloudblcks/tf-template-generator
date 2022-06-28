@@ -94,7 +94,6 @@ class LowLevelDBItem(LowLevelAWSItem):
 
 
 class EC2Docker(LowLevelComputeItem):
-    # TODO: add proper storage access permissions
     # TODO: add branches for public vs non public access
     def __init__(
         self,
