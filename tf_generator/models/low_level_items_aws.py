@@ -163,12 +163,15 @@ class S3PublicWebsite(LowLevelStorageItem):
 
 
 def compile_item(compiled, item, out_outputs, out_template, out_variables):
-    config = item.generate_config()
-    out_template += config.main if config.main else ""
-    out_variables += config.variables if config.variables else ""
-    out_outputs += config.outputs if config.outputs else ""
-    compiled[item.uid] = True
-    return out_outputs, out_template, out_variables
+    if not compiled[item.uid]:
+        config = item.generate_config()
+        out_template += config.main if config.main else ""
+        out_variables += config.variables if config.variables else ""
+        out_outputs += config.outputs if config.outputs else ""
+        compiled[item.uid] = True
+        return out_outputs, out_template, out_variables
+    else:
+        return "", "", ""
 
 
 class TerraformGeneratorAWS:
@@ -183,12 +186,11 @@ class TerraformGeneratorAWS:
         out_outputs = ""
 
         for item in self.ll_list:
-            if not compiled[item.uid]:
-                if len(item.depends_on) > 0:
-                    for dep in item.depends_on:
-                        out_outputs, out_template, out_variables = compile_item(
-                            compiled, dep, out_outputs, out_template, out_variables
-                        )
+            if len(item.depends_on) > 0:
+                for dep in item.depends_on:
+                    out_outputs, out_template, out_variables = compile_item(
+                        compiled, dep, out_outputs, out_template, out_variables
+                    )
             # checking one more time in case it was already generated via dependencies
             if not compiled[item.uid]:
                 out_outputs, out_template, out_variables = compile_item(

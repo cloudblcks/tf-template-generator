@@ -1,11 +1,11 @@
-resource "aws_ecs_cluster" "{{ uid }}_ecs_cluster_name" {
-  name = var.{{ uid }}_ecs_cluster_name
+resource "aws_ecs_cluster" "ecs_cluster_name-{{ uid }}" {
+  name = var.ecs_cluster_name-{{ uid }}
 }
 
 # ALB Security Group (Traffic Internet -> ALB)
-resource "aws_security_group" "{{ uid }}_load-balancer" {
+resource "aws_security_group" "load-balancer-{{ uid }}" {
   description = "Controls access to the ALB"
-  vpc_id      = aws_vpc.{{ vpc_uid }}-vpc.id
+  vpc_id      = aws_vpc.vpc-{{ vpc_uid }}.id
 
   ingress {
     from_port   = 80
@@ -30,14 +30,14 @@ resource "aws_security_group" "{{ uid }}_load-balancer" {
 }
 
 # ECS Security group (traffic ALB -> ECS, ssh -> ECS)
-resource "aws_security_group" "{{ uid }}_ecs" {
+resource "aws_security_group" "ecs-{{ uid }}" {
   description = "Allows inbound access from the ALB only"
-  vpc_id      = aws_vpc.{{  vpc_uid }}_vpc.id
+  vpc_id      = aws_vpc.vpc-{{ vpc_uid }}.id
   ingress {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    security_groups = [aws_security_group.{{ uid }}_load-balancer.id]
+    security_groups = [aws_security_group.load-balancer-{{ uid }}.id]
   }
 
   ingress {
@@ -55,7 +55,7 @@ resource "aws_security_group" "{{ uid }}_ecs" {
   }
 }
 
-resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
+resource "aws_iam_role" "ecs-{{ uid }}-host-role" {
   assume_role_policy =<<EOT
 {
   "Version": "2008-10-17",
@@ -75,7 +75,7 @@ resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
   EOT
 {% if s3_buckets|length > 0  %}
   inline_policy {
-    name = "{{ uid }}_ecs-host-role-inline-policy"
+    name = "ecs-{{ uid }}-host-role-inline-policy"
 
     policy =<<EOT
 {
@@ -86,7 +86,7 @@ resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
         "Action": ["s3:ListBucket", "s3:*Object"],
         "Resource": [
         {% for bucket in s3_buckets %}
-        "${aws_s3_bucket.{{ bucket.uid }}_bucket.arn}",
+        "${aws_s3_bucket.bucket-{{ bucket.uid }}.arn}",
         {% endfor %}
         ]
     }
@@ -97,37 +97,37 @@ resource "aws_iam_role" "{{ uid }}_ecs-host-role" {
   {% endif %}
 }
 
-resource "aws_iam_instance_profile" "{{ uid }}_ecs_instance_profile" {
+resource "aws_iam_instance_profile" "ecs-{{ uid }}_instance_profile" {
   path = "/"
-  role = aws_iam_role.{{ uid }}_ecs-host-role.name
+  role = aws_iam_role.ecs-{{ uid }}-host-role.name
 }
 
-resource "aws_key_pair" "{{ uid }}_ssh_key" {
-  public_key = file(var.{{ uid }}_ssh_pubkey_file)
+resource "aws_key_pair" "ssh_key-{{ uid }}" {
+  public_key = file(var.ssh_pubkey_file-{{ uid }})
 }
 
-resource "aws_launch_configuration" "{{ uid }}_ecs_launch_configuration" {
-  name                        = var.{{ uid }}_ecs_cluster_name
-  image_id                    = var.{{ uid }}_ami
-  instance_type               = var.{{ uid }}_instance_type
-  security_groups             = [aws_security_group.{{ uid }}_ecs.id]
-  iam_instance_profile        = aws_iam_instance_profile.{{ uid }}_ecs_instance_profile.name
-  key_name                    = aws_key_pair.{{ uid }}_ssh_key.key_name
+resource "aws_launch_configuration" "ecs-{{ uid }}_launch_configuration" {
+  name                        = var.ecs_cluster_name-{{ uid }}
+  image_id                    = var.ami-{{ uid }}
+  instance_type               = var.instance_type-{{ uid }}
+  security_groups             = [aws_security_group.ecs-{{ uid }}.id]
+  iam_instance_profile        = aws_iam_instance_profile.ecs-{{ uid }}_instance_profile.name
+  key_name                    = aws_key_pair.ssh_key-{{ uid }}.key_name
   associate_public_ip_address = true
-  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${var.{{ uid }}_ecs_cluster_name}' > /etc/ecs/ecs.config"
+  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${var.ecs_cluster_name-{{ uid }}}' > /etc/ecs/ecs.config"
 }
 
 
-resource "aws_ecs_task_definition" "{{ uid }}_task_definition" {
-  family                = var.{{ uid }}_task_definition_family
+resource "aws_ecs_task_definition" "task_definition-{{ uid }}" {
+  family                = var.task_definition_family-{{ uid }}
   container_definitions = <<EOT
   [
   {
-    "name": "${var.{{ uid }}_container_name}",
-    "image": "${var.{{ uid }}_docker_image_url_django}",
+    "name": "${var.container_name-{{ uid }}}",
+    "image": "${var.docker_image_url-{{ uid }}_django}",
     "essential": true,
-    "cpu": $var.{{ uid }}_container_cpu,
-    "memory": $var.{{ uid }}_container_cpu,
+    "cpu": $var.container_cpu-{{ uid }},
+    "memory": $var.container_cpu-{{ uid }},
     "links": [],
     "portMappings": [/*
       {
@@ -146,21 +146,21 @@ resource "aws_ecs_task_definition" "{{ uid }}_task_definition" {
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/${var.{{ uid }}_container_name}",
+        "awslogs-group": "/ecs/${var.container_name-{{ uid }}}",
         "awslogs-region": "${region}",
-        "awslogs-stream-prefix": "${var.{{ uid }}_container_name}_log_stream"
+        "awslogs-stream-prefix": "${var.container_name-{{ uid }}}_log_stream"
       }
     }
   }
 ]
   EOT
   volume {
-    name      = "${var.{{ uid }}_container_volume_name}"
-    host_path = "${var.{{ uid }}_container_volume_path}"
+    name      = "${var.container_volume_name-{{ uid }}}"
+    host_path = "${var.container_volume_path-{{ uid }}}"
   }
 }
 
-resource "aws_iam_role" "{{ uid }}_ecs-service-role" {
+resource "aws_iam_role" "ecs-{{ uid }}-service-role" {
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -180,7 +180,7 @@ resource "aws_iam_role" "{{ uid }}_ecs-service-role" {
   EOT
 }
 
-resource "aws_iam_role_policy" "{{ uid }}_ecs-service-role-policy" {
+resource "aws_iam_role_policy" "ecs-{{ uid }}-service-role-policy" {
   policy = <<EOT
 {
   "Version": "2012-10-17",
@@ -204,16 +204,16 @@ resource "aws_iam_role_policy" "{{ uid }}_ecs-service-role-policy" {
 }
   EOT
 
-  role   = aws_iam_role.{{ uid }}_ecs-service-role.id
+  role   = aws_iam_role.ecs-{{ uid }}-service-role.id
 }
 
 
 # Production Load Balancer
-resource "aws_lb" "{{ uid }}_aws_alb" {
+resource "aws_lb" "aws_alb-{{ uid }}" {
   load_balancer_type = "application"
   internal           = false
-  security_groups    = [aws_security_group.{{ uid }}_load-balancer.id]
-  subnets            = [aws_subnet.{{ vpc_uid }}_public-subnet-1.id, aws_subnet.{{ vpc_uid }}_public-subnet-2.id]
+  security_groups    = [aws_security_group.load-balancer-{{ uid }}.id]
+  subnets            = [aws_subnet.public-subnet-1-{{ vpc_uid }}.id, aws_subnet.public-subnet-2-{{ vpc_uid }}.id]
 }
 
 /*data "aws_acm_certificate" "ssl_certificate" {
@@ -221,13 +221,13 @@ resource "aws_lb" "{{ uid }}_aws_alb" {
 }*/
 
 # Target group
-resource "aws_alb_target_group" "{{ uid }}_default-target-group" {
+resource "aws_alb_target_group" "default-target-group-{{ uid }}" {
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.{{ vpc_uid }}-vpc.id
+  vpc_id   = aws_vpc.vpc-{{ vpc_uid }}.id
 
   health_check {
-    path                = var.{{ uid }}_healthcheck_path
+    path                = var.healthcheck_path-{{ uid }}
     port                = "traffic-port"
     healthy_threshold   = 5
     unhealthy_threshold = 2
@@ -239,8 +239,8 @@ resource "aws_alb_target_group" "{{ uid }}_default-target-group" {
 
 
 # Listener (redirects traffic from the load balancer to the target group)
-resource "aws_alb_listener" "{{ uid }}_ecs-alb-http-listener" {
-  load_balancer_arn = aws_lb.{{ uid }}_aws_alb.id
+resource "aws_alb_listener" "ecs-alb-http-listener-{{ uid }}" {
+  load_balancer_arn = aws_lb.aws_alb-{{ uid }}.id
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -248,21 +248,21 @@ resource "aws_alb_listener" "{{ uid }}_ecs-alb-http-listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_alb_target_group.{{ uid }}_default-target-group.arn
+    target_group_arn = aws_alb_target_group.default-target-group-{{ uid }}.arn
   }
 }
 
 
-resource "aws_ecs_service" "{{ uid }}_ecs_service" {
-  cluster         = aws_ecs_cluster.{{ uid }}_ecs_cluster_name.id
-  task_definition = aws_ecs_task_definition.{{ uid }}_task_definition.arn
-  iam_role        = aws_iam_role.{{ uid }}_ecs-service-role.arn
-  desired_count   = var.{{ uid }}_app_count
-  depends_on      = [aws_alb_listener.{{ uid }}_ecs-alb-http-listener, aws_iam_role_policy.{{ uid }}_ecs-service-role-policy]
+resource "aws_ecs_service" "ecs_service-{{ uid }}" {
+  cluster         = aws_ecs_cluster.ecs_cluster_name-{{ uid }}.id
+  task_definition = aws_ecs_task_definition.task_definition-{{ uid }}.arn
+  iam_role        = aws_iam_role.ecs-{{ uid }}-service-role.arn
+  desired_count   = var.app_count-{{ uid }}
+  depends_on      = [aws_alb_listener.ecs-alb-http-listener-{{ uid }}, aws_iam_role_policy.ecs-{{ uid }}-service-role-policy]
 
   load_balancer {
-    target_group_arn = aws_alb_target_group.{{ uid }}_default-target-group.arn
-    container_name   = var.{{ uid }}_container_name
+    target_group_arn = aws_alb_target_group.default-target-group-{{ uid }}.arn
+    container_name   = var.container_name-{{ uid }}
     container_port   = 80
   }
 }
@@ -271,11 +271,11 @@ resource "aws_ecs_service" "{{ uid }}_ecs_service" {
 ###############
 # Autoscaling
 ###############
-resource "aws_autoscaling_group" "{{ uid }}_autoscaling_group" {
-  min_size             = var.{{ uid }}_autoscale_min
-  max_size             = var.{{ uid }}_autoscale_max
-  desired_capacity     = var.{{ uid }}_autoscale_desired
+resource "aws_autoscaling_group" "autoscaling_group-{{ uid }}" {
+  min_size             = var.autoscale_min-{{ uid }}
+  max_size             = var.autoscale_max-{{ uid }}
+  desired_capacity     = var.autoscale_desired-{{ uid }}
   health_check_type    = "EC2"
-  launch_configuration = aws_launch_configuration.{{ uid }}_ecs_launch_configuration.name
-  vpc_zone_identifier  = [aws_subnet.{{ vpc_uid }}_private-subnet-1.id, aws_subnet.{{ vpc_uid }}_private-subnet-2.id]
+  launch_configuration = aws_launch_configuration.ecs-{{ uid }}_launch_configuration.name
+  vpc_zone_identifier  = [aws_subnet.private-subnet-1-{{ vpc_uid }}.id, aws_subnet.private-subnet-2-{{ vpc_uid }}.id]
 }
