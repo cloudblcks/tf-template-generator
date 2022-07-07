@@ -12,6 +12,7 @@ from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
 from models.s3_templates import ServiceProvider
+from models.tf_type_mapping import ResourceDetails
 
 load_dotenv()
 
@@ -65,12 +66,13 @@ def cli():
     constraint=mutually_exclusive,
 )
 @cloup.option(
+    "output_path",
     "--out",
     "-o",
     default=None,
     help="Path to output file (Recommended to use .tf suffix). If none supplied, will print output to stdout",
 )
-def build(file, data, out):
+def build(file, data, output_path):
     """
     Generate Terraform configuration from Cloudblocks mapping file
     """
@@ -80,12 +82,9 @@ def build(file, data, out):
     if not _validate(data):
         exit("Input was invalid, please run validate to make sure it's valid")
 
-    with open(TEMPLATES_MAP_PATH, "r") as f:
-        template_map = json.load(f)
-        generator = TerraformGenerator(template_map)
-    templates = generator.generate_template_from_json(data)
-    if out:
-        template_writer.write(out, templates)
+    templates = _build(data)
+    if output_path:
+        template_writer.write(output_path, templates)
     else:
         print(templates)
 
@@ -122,17 +121,6 @@ def validate(file, data):
     return _validate(data)
 
 
-def _validate(data):
-    is_valid = schema_validator.validate(data)
-
-    if is_valid:
-        print("Configuration is valid")
-    else:
-        print("Configuration isn't valid")
-
-    return is_valid
-
-
 @cli.command()
 @cloup.argument(
     "keyword",
@@ -167,7 +155,7 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
     List supported resources
     """
     try:
-        results = RESOURCE_SETTINGS.search(keyword, cloud, tags)
+        results = _search(keyword, cloud, tags)
     except KeyError as e:
         print(e)
         return -1
@@ -177,6 +165,32 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
             print(resource.key)
         else:
             print(resource.to_yaml())
+
+
+def _build(data):
+    with open(TEMPLATES_MAP_PATH, "r") as f:
+        template_map = json.load(f)
+        generator = TerraformGenerator(template_map)
+    templates = generator.generate_template_from_json(data)
+    return templates
+
+
+def _validate(data):
+    is_valid = schema_validator.validate(data)
+
+    if is_valid:
+        print("Configuration is valid")
+    else:
+        print("Configuration isn't valid")
+
+    return is_valid
+
+
+def _search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]]) -> List[ResourceDetails]:
+    try:
+        return RESOURCE_SETTINGS.search(keyword, cloud, tags)
+    except KeyError as e:
+        raise e
 
 
 if __name__ == "__main__":

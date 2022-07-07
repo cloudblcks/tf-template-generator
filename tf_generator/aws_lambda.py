@@ -4,12 +4,13 @@ import os
 from dotenv import load_dotenv
 
 from generator import TerraformGenerator
+import main
 
 load_dotenv()
 TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
 
 
-def lambda_handler(event, context):
+def lambda_handler_old(event, context):
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
         generator = TerraformGenerator(template_map)
@@ -37,3 +38,20 @@ def lambda_handler(event, context):
         data = json.loads(event["body"])["cloudblocks_data"]
         templates = generator.generate_template_from_json(data)
         return {"statusCode": 200, "body": templates}
+
+
+def lambda_handler_new(event, context):
+    print(json.dumps(event))
+    request = json.loads(event["body"])
+    action = request.get("action")
+    if action == "validate":
+        results = main._validate(request.get("data"))
+    elif action == "build":
+        results = main._build(request.get("data"))
+    elif action == "search":
+        search_results = main._search(request.get("keyword"), request.get("cloud"), request.get("tags"))
+        results = [result.to_json() for result in search_results]
+    else:
+        raise KeyError(f"Action {action} not recognised")
+
+    return {"statusCode": 200, "body": results}
