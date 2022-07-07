@@ -3,11 +3,12 @@ import json
 from typing import Optional, List
 
 import cloup
+from cloup.constraints import mutually_exclusive
+from dotenv import load_dotenv
+
 import schema_validator
 import template_writer
-from cloup.constraints import mutually_exclusive
 from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
-from dotenv import load_dotenv
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
 from models.s3_templates import ServiceProvider
@@ -69,15 +70,15 @@ def cli():
     default=None,
     help="Path to output file (Recommended to use .tf suffix). If none supplied, will print output to stdout",
 )
-def parse(file, data, out):
+def build(file, data, out):
     """
     Generate Terraform configuration from Cloudblocks mapping file
     """
     if file:
         data = load_mapping(file)
 
-    if not validate(None, data):
-        pass
+    if not _validate(data):
+        exit("Input was invalid, please run validate to make sure it's valid")
 
     with open(TEMPLATES_MAP_PATH, "r") as f:
         template_map = json.load(f)
@@ -118,7 +119,12 @@ def validate(file, data):
     else:
         data = json.loads(data)
 
+    return _validate(data)
+
+
+def _validate(data):
     is_valid = schema_validator.validate(data)
+
     if is_valid:
         print("Configuration is valid")
     else:
