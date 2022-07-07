@@ -29,12 +29,34 @@ class ServiceProvider(LowercaseStrEnum):
         return ServiceProvider[key.upper()]
 
 
-class ServiceCategory(LowercaseStrEnum):
+class ResourceCategory(LowercaseStrEnum):
     COMPUTE = auto()
     SERVERLESS = auto()
     DATABASE = auto()
     STORAGE = auto()
     WEBSITE_HOST = auto()
+    INTERNET = auto()
+    THIRD_PARTY = auto()
+
+    @staticmethod
+    def all() -> Set["ResourceCategory"]:
+        return {
+            ResourceCategory.COMPUTE,
+            ResourceCategory.STORAGE,
+            ResourceCategory.DATABASE,
+            ResourceCategory.INTERNET,
+            ResourceCategory.THIRD_PARTY,
+        }
+
+    @staticmethod
+    def get(key: str) -> "ResourceCategory":
+        if key:
+            return ResourceCategory[key.upper()]
+        raise KeyError(f"Category {key} not recognised")
+
+    @staticmethod
+    def values() -> list[str]:
+        return [x.value for x in ResourceCategory]
 
 
 @dataclass
@@ -151,7 +173,7 @@ class ServiceCategoryProviders(JsonSerialisable):
 @dataclass
 class ServiceCategories(JsonSerialisable):
     providers: Dict[ServiceProvider, ProviderTemplate]
-    provider_services: Dict[ServiceCategory, ServiceCategoryProviders]
+    provider_services: Dict[ResourceCategory, ServiceCategoryProviders]
 
     @classmethod
     def from_dict(cls, d: Dict):
@@ -169,7 +191,7 @@ class ServiceCategories(JsonSerialisable):
 
     def get(
         self,
-        category: ServiceCategory,
+        category: ResourceCategory,
         provider: ServiceProvider,
         name: str,
         loader: Optional[S3TemplateLoader] = None,

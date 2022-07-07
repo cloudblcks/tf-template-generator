@@ -6,26 +6,28 @@ from models.tf_type_mapping import ResourceMap, ResourceDetails
 
 TEST_DATA_BIGTABLE_MAPPING = {
     "key": "bigtable",
+    "category": "database",
     "clouds": ["gcp"],
     "tags": ["database", "gcp-only"],
     "description": "Google's NoSQL database for 1TB+ systems",
 }
 TEST_DATA_DOCKER_MAPPING = {
     "key": "docker",
-    "aliases": ["docker-container", "docker-stateful"],
+    "category": "compute",
     "clouds": ["all"],
     "tags": ["compute", "cloud-agnostic", "serverless"],
     "description": "Generic docker container running in the cloud",
 }
 TEST_DATA_POSTGRES_MAPPING = {
     "key": "postgresql",
-    "aliases": ["postgres"],
+    "category": "database",
     "clouds": ["all"],
     "tags": ["database", "rdbms", "sql"],
     "description": "Open source relational database (SQL-RDBMS)",
 }
 TEST_DATA_S3_MAPPING = {
     "key": "s3",
+    "category": "storage",
     "clouds": ["aws"],
     "tags": ["storage", "aws-only"],
     "description": "Amazon Web Services static storage",
@@ -74,7 +76,7 @@ def test_resource_map_getter(test_data: Dict, resource_map: ResourceMap):
     [
         pytest.param({}, ["bigtable", "docker", "postgresql", "s3"], id="test_no_keyword"),
         pytest.param({"keyword": "docker"}, ["docker"], id="test_search_by_key"),
-        pytest.param({"keyword": "docker-container"}, ["docker"], id="test_search_by_alias"),
+        pytest.param({"keyword": "compute"}, ["docker"], id="test_search_by_category"),
         pytest.param({"keyword": "Generic docker"}, ["docker"], id="test_search_by_keyword_in_description"),
         pytest.param({"cloud": "aws"}, ["docker", "postgresql", "s3"], id="test_filter_by_cloud"),
         pytest.param({"tags": ["database"]}, ["bigtable", "postgresql"], id="test_filter_by_db_tag"),

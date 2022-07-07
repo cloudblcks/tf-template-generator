@@ -18,7 +18,16 @@ class JsonSerialisable:
         return cls.from_dict(json.loads(d))
 
     def to_dict(self) -> Dict:
-        return {key: value for key, value in asdict(self).items() if value}
+        out = {}
+        for key, value in asdict(self).items():
+            if not value:
+                continue
+
+            if isinstance(value, Enum):
+                out[key] = value.value
+            else:
+                out[key] = value
+        return out
 
     def to_json(self, pretty=False) -> str:
         if pretty:

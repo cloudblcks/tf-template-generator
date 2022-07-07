@@ -4,14 +4,9 @@ from typing import Dict, Optional, List, Set
 from jinja2 import Template
 
 from models.high_level_items import (
-    HighLevelCompute,
-    HighLevelDB,
-    HighLevelInternet,
-    HighLevelStorage,
-    HighLevelItem,
-    HighLevelBinding,
+    HighLevelResource,
     HighLevelBindingDirection,
-    HighLevelItemTypes,
+    HighLevelMap,
 )
 from models.low_level_items_aws import (
     LowLevelAWSItem,
@@ -28,9 +23,9 @@ from models.low_level_items_aws import (
 from models.s3_templates import (
     ProviderTemplate,
     ServiceCategories,
-    ServiceCategory,
     ServiceTemplate,
 )
+from models.tf_type_mapping import ResourceCategory
 from template_loader import S3TemplateLoader
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
@@ -71,20 +66,24 @@ class TerraformGenerator:
         templates = {}
 
         if compute_service:
-            templates[ServiceCategory.COMPUTE] = self.templates.get(ServiceCategory.COMPUTE, provider, compute_service)
+            templates[ResourceCategory.COMPUTE] = self.templates.get(
+                ResourceCategory.COMPUTE, provider, compute_service
+            )
         if serverless_service:
-            templates[ServiceCategory.SERVERLESS] = self.templates.get(
-                ServiceCategory.SERVERLESS, provider, serverless_service
+            templates[ResourceCategory.SERVERLESS] = self.templates.get(
+                ResourceCategory.SERVERLESS, provider, serverless_service
             )
         if storage_service:
-            templates[ServiceCategory.STORAGE] = self.templates.get(ServiceCategory.STORAGE, provider, storage_service)
+            templates[ResourceCategory.STORAGE] = self.templates.get(
+                ResourceCategory.STORAGE, provider, storage_service
+            )
         if database_service:
-            templates[ServiceCategory.DATABASE] = self.templates.get(
-                ServiceCategory.DATABASE, provider, database_service
+            templates[ResourceCategory.DATABASE] = self.templates.get(
+                ResourceCategory.DATABASE, provider, database_service
             )
         if website_host_service:
-            templates[ServiceCategory.WEBSITE_HOST] = self.templates.get(
-                ServiceCategory.WEBSITE_HOST, provider, website_host_service
+            templates[ResourceCategory.WEBSITE_HOST] = self.templates.get(
+                ResourceCategory.WEBSITE_HOST, provider, website_host_service
             )
 
         return templates  # type: ignore
@@ -114,7 +113,7 @@ class TerraformGenerator:
             }
         )
 
-    def generate_template_from_json(self, json_data: List) -> str:
+    def generate_template_from_json(self, json_data: List[Dict]) -> str:
         hl_arr = json_to_high_level_list(json_data)
         self.generate_low_level_aws_map(hl_arr)
         generator = TerraformGeneratorAWS(self.ll_map, self.ll_list)
@@ -131,23 +130,23 @@ class TerraformGenerator:
         self.ll_map[item.uid] = item
         self.ll_list.append(item)
 
-    def generate_low_level_aws_map(self, input_arr: List[HighLevelItemTypes]):
-        for item in input_arr:
+    def generate_low_level_aws_map(self, input_arr: HighLevelMap):
+        for item in input_arr.resources:
             if item.uid not in self.ll_map:
-                if isinstance(item, HighLevelCompute):
+                if item.category == ResourceCategory.COMPUTE:
                     self.high_to_low_mapping_compute(item)
-                elif isinstance(item, HighLevelDB):
+                elif item == ResourceCategory.DATABASE:
                     self.high_to_low_mapping_db(item)
-                elif isinstance(item, HighLevelStorage):
+                elif item.category == ResourceCategory.STORAGE:
                     self.high_to_low_mapping_storage(item)
 
-    def high_to_low_mapping_storage(self, storage: HighLevelStorage):
+    def high_to_low_mapping_storage(self, storage: HighLevelResource):
         s3: Optional[LowLevelStorageItem] = None
         for _ in (x for x in storage.bindings if x.direction == HighLevelBindingDirection.TO):
             raise CloudblocksValidationException("Storage item cannot bind TO another element")
-        for _ in (x for x in storage.bindings if isinstance(x.item, HighLevelDB)):
+        for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.DATABASE):
             raise CloudblocksValidationException("Storage item cannot bind with a database")
-        for _ in (x for x in storage.bindings if isinstance(x.item, HighLevelInternet)):
+        for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.INTERNET):
             s3 = S3PublicWebsite(storage.uid)
             self.add_low_level_item(s3)
             break
@@ -155,14 +154,14 @@ class TerraformGenerator:
             s3 = S3(storage.uid)
             self.add_low_level_item(s3)
 
-    def high_to_low_mapping_compute(self, compute: HighLevelCompute):
+    def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
-        for _ in (x for x in compute.bindings if isinstance(x.item, HighLevelInternet)):
+        for _ in (x for x in compute.bindings if x.target.category == ResourceCategory.INTERNET):
             needs_internet_access = True
         vpc: Optional[VPC] = None
-        for item in (x for x in compute.bindings if isinstance(x.item, HighLevelCompute)):
-            if item.item.uid in self.ll_map:
-                linked_compute = self.ll_map[item.item.uid]
+        for item in (x for x in compute.bindings if x.target.category == ResourceCategory.COMPUTE):
+            if item.target.uid in self.ll_map:
+                linked_compute = self.ll_map[item.target.uid]
                 assert isinstance(linked_compute, LowLevelComputeItem)
                 vpc = linked_compute.vpc
                 break
@@ -170,20 +169,20 @@ class TerraformGenerator:
             vpc = VPC(generate_id())
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
-        for item in (x for x in compute.bindings if isinstance(x.item, HighLevelStorage)):
-            if storage := self.ll_map.get(item.item.uid):
+        for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
+            if storage := self.ll_map.get(item.target.uid):
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
             else:
-                assert isinstance(item.item, HighLevelStorage)
-                self.high_to_low_mapping_storage(item.item)
-                storage = self.ll_map[item.item.uid]
+                assert item.target == ResourceCategory.STORAGE
+                self.high_to_low_mapping_storage(item.target)
+                storage = self.ll_map[item.target.uid]
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
         ec2 = EC2Docker(compute.uid, vpc, needs_internet_access=needs_internet_access, linked_storage=linked_storage)
         self.add_low_level_item(ec2)
 
-    def high_to_low_mapping_db(self, compute: HighLevelDB):
+    def high_to_low_mapping_db(self, compute: HighLevelResource):
         # rds = RDS(db.uid, self.templates)
         # linked_compute = db.linked_compute(low_level_map)
         # if linked_compute:
@@ -195,31 +194,13 @@ class TerraformGenerator:
         pass
 
 
-def json_to_high_level_list(json_arr: List[Dict]) -> List[HighLevelItemTypes]:
-    temp: Dict[str, HighLevelItemTypes] = {}
-    for item in json_arr:
-        item_type = item["clbksType"]
-        uid = item["clbksId"]
-        if item_type == "compute":
-            temp[uid] = HighLevelCompute(uid)
-        elif item_type == "internet":
-            temp[uid] = HighLevelInternet(uid)
-        elif item_type == "db":
-            temp[uid] = HighLevelDB(uid)
-        elif item_type == "storage":
-            temp[uid] = HighLevelStorage(uid)
-    for item in json_arr:
-        if new_item := temp[item["clbksId"]]:
-            for binding in item["bindings"]:
-                binding_id = binding["id"]
-                direction = HighLevelBindingDirection.match_string(binding["direction"])
-                el = temp[binding_id]
-                new_item.bindings.append(HighLevelBinding(el, direction))
-    return list(temp.values())
+def json_to_high_level_list(data: List[Dict]) -> HighLevelMap:
+    # TODO: Add support for multiple clouds (this is hard coded to a single cloud instance)
+    return HighLevelMap.from_dict(data[0])
 
 
-def is_internet_needed(input_arr: List[HighLevelItem]) -> bool:
+def is_internet_needed(input_arr: List[HighLevelResource]) -> bool:
     for item in input_arr:
-        if isinstance(item, HighLevelInternet):
+        if item.category == ResourceCategory.INTERNET:
             return True
     return False

@@ -17,13 +17,13 @@ TEST_DATA_ATTRIBUTES = [
 ]
 TEST_DATA_RESOURCES = [
     ("foo", "resource", ["lorem", "ipsum"], [],
-     {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"], "attributes": []}),
+     {"identifier": "foo", "block_type": "resource", "tags": ["lorem", "ipsum"]}),
     ("foo", "resource", ["lorem", "ipsum"], [ResourceParameter("foo", "bar")],
-     {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"],
-      "attributes": [{"name": "foo", "value": "bar"}]}),
+     {"identifier": "foo", "block_type": "resource", "tags": ["lorem", "ipsum"],
+      "parameters": [{"name": "foo", "value": "bar"}]}),
     ("foo", "resource", ["lorem", "ipsum"], [ResourceParameter("foo", "bar"), ResourceParameter("lorem", "ipsum")],
-     {"identifier": "foo", "block_type": "resource", "labels": ["lorem", "ipsum"],
-      "attributes": [{"name": "foo", "value": "bar"}, {"name": "lorem", "value": "ipsum"}]}),
+     {"identifier": "foo", "block_type": "resource", "tags": ["lorem", "ipsum"],
+      "parameters": [{"name": "foo", "value": "bar"}, {"name": "lorem", "value": "ipsum"}]}),
 ]
 
 
@@ -37,14 +37,14 @@ def test_resource_param_json_serialisation(name, value, expected):
     assert attribute.to_json() == json.dumps(expected)
 
 
-@pytest.mark.parametrize("identifier,block_type,labels,attributes,expected", TEST_DATA_RESOURCES)
+@pytest.mark.parametrize("identifier,block_type,tags,attributes,expected", TEST_DATA_RESOURCES)
 def test_resource_json_serialisation(
     identifier: str,
     block_type: str,
-    labels: List[str],
+    tags: List[str],
     attributes: List[ResourceParameter],
     expected,
 ):
-    block = Resource(identifier, block_type, labels, attributes)
+    block = Resource(identifier, block_type, tags, attributes)
     assert block.to_dict() == expected
     assert block.to_json() == json.dumps(expected)

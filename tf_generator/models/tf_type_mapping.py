@@ -1,15 +1,14 @@
-import json
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-from models.s3_templates import ServiceProvider
+from models.s3_templates import ServiceProvider, ResourceCategory
 from models.utils import JsonSerialisable
 
 
 @dataclass
 class ResourceDetails(JsonSerialisable):
     key: str
-    aliases: Optional[List[str]]
+    category: ResourceCategory
     tags: Optional[List[str]]
     clouds: List[ServiceProvider]
     description: Optional[str]
@@ -22,19 +21,21 @@ class ResourceDetails(JsonSerialisable):
         else:
             clouds = [ServiceProvider.get(cloud) for cloud in d.get("clouds")]
 
+        category = ResourceCategory.get(d.get("category"))
+
         return cls(
             key=d.get("key"),
-            aliases=d.get("aliases") or [],
+            category=category,
             tags=d.get("tags") or [],
             clouds=clouds,
             description=d.get("description") or "",
             params=d.get("params") or [],
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: "ResourceDetails"):
         return (
             self.key == other.key
-            and self.aliases == other.aliases
+            and self.category == other.category
             and self.tags == other.tags
             and self.clouds == other.clouds
             and self.description == other.description
@@ -50,17 +51,13 @@ class ResourceDetails(JsonSerialisable):
     def to_dict(self) -> Dict:
         return {
             self.key: {
-                "aliases": self.aliases,
+                "category": self.category,
                 "tags": self.tags,
                 "clouds": [c.value for c in self.clouds],
                 "description": self.description,
                 "params": self.params,
             }
         }
-
-    @property
-    def keys(self):
-        return self.aliases + [self.key]
 
     @staticmethod
     def matches_cloud(resource: "ResourceDetails", cloud: str) -> bool:
@@ -74,7 +71,7 @@ class ResourceDetails(JsonSerialisable):
     def matches_keyword(resource: "ResourceDetails", keyword: str) -> bool:
         return (
             keyword == resource.key
-            or keyword in resource.aliases
+            or keyword in resource.category
             or keyword in resource.tags
             or keyword in resource.clouds
             or keyword in resource.description.lower()
@@ -93,7 +90,7 @@ class ResourceMap(JsonSerialisable):
     def get(self, key: str) -> ResourceDetails:
         key = key.lower()
         for resource in self.resources:
-            if key in resource.keys:
+            if resource.key == key:
                 return resource
 
         raise KeyError(f"No resource with key {key} found")

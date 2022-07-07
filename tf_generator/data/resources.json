@@ -1,6 +1,7 @@
 [
   {
     "key": "s3",
+    "category": "storage",
     "clouds": [
       "aws"
     ],
@@ -18,6 +19,7 @@
   },
   {
     "key": "docker",
+    "category": "compute",
     "clouds": [
       "aws"
     ],
@@ -29,6 +31,7 @@
   },
   {
     "key": "postgresql",
+    "category": "database",
     "clouds": [
       "aws"
     ],

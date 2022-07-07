@@ -7,96 +7,94 @@ from models.schemas import MAP_SCHEMA, RESOURCE_SCHEMA, CLOUD_SCHEMA
 
 TEST_DATA_SYS_CONFIGS = [
     pytest.param(
-        {"category": "compute", "id": "foo"},
+        {"foo": {"resource": "docker"}},
         RESOURCE_SCHEMA,
         id="test_simple_resource_schema",
     ),
     pytest.param(
-        [{"category": "compute", "id": "foo"}],
+        {"foo": {"resource": "docker"}},
         MAP_SCHEMA,
         id="test_simple_map_schema",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo", "params": {"lorem": "ipsum", "answer": 42}},
-        ],
+        {
+            "foo": {"resource": "docker", "params": {"lorem": "ipsum", "answer": 42}},
+        },
         MAP_SCHEMA,
         id="test_single_resource_map_schema_sample_params",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo"},
-            {"category": "storage", "id": "bar"},
-        ],
+        {
+            "foo": {"resource": "docker"},
+            "bar": {"resource": "postgresql"},
+        },
         MAP_SCHEMA,
         id="test_multi_resource_map_schema",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo", "params": {}},
-        ],
+        {
+            "foo": {"resource": "docker", "params": {}},
+        },
         MAP_SCHEMA,
         id="test_single_resource_map_schema_empty_params",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo", "bindings": []},
-            {"category": "storage", "id": "bar"},
-        ],
+        {
+            "foo": {"resource": "docker", "bindings": []},
+            "bar": {"resource": "postgresql"},
+        },
         MAP_SCHEMA,
         id="test_multi_resource_map_schema_empty_bindings",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo", "bindings": [{"id": "bar", "direction": "to"}]},
-            {"category": "storage", "id": "bar"},
-        ],
+        {
+            "foo": {"resource": "docker", "bindings": [{"id": "bar", "direction": "to"}]},
+            "bar": {"resource": "postgresql"},
+        },
         MAP_SCHEMA,
         id="test_multi_resource_map_schema_one_binding",
     ),
     pytest.param(
-        [
-            {"category": "compute", "id": "foo", "bindings": [{"id": "bar", "direction": "to"}]},
-            {"category": "storage", "id": "bar", "bindings": [{"id": "foo", "direction": "from"}]},
-        ],
+        {
+            "foo": {"resource": "docker", "bindings": [{"id": "bar", "direction": "to"}]},
+            "bar": {"resource": "postgresql", "bindings": [{"id": "foo", "direction": "from"}]},
+        },
         MAP_SCHEMA,
         id="test_multi_resource_map_schema_two_bindings",
     ),
     pytest.param(
-        [
-            {
-                "category": "compute",
-                "id": "foo",
+        {
+            "foo": {
+                "resource": "docker",
                 "bindings": [{"id": "bar", "direction": "to"}],
                 "params": {"lorem": "ipsum", "answer": 42},
             },
-            {
-                "category": "storage",
-                "id": "bar",
+            "bar": {
+                "resource": "postgresql",
                 "bindings": [{"id": "foo", "direction": "from"}],
                 "params": {"foo": "bar", "answer": "42"},
             },
-        ],
+        },
         MAP_SCHEMA,
         id="test_multi_resource_map_schema_two_bindings_and_params",
     ),
     pytest.param(
-        {"cloud": "aws", "resources": [{"category": "compute", "id": "foo"}]},
+        {"cloud": "aws", "resources": {"foo": {"resource": "docker"}}},
         CLOUD_SCHEMA,
         id="test_simple_CLOUD_SCHEMA_no_region",
     ),
     pytest.param(
-        {"cloud": "aws", "regions": [{"region": "us-east-1", "resources": [{"category": "compute", "id": "foo"}]}]},
+        {"cloud": "aws", "regions": [{"region": "us-east-1", "resources": {"foo": {"resource": "docker"}}}]},
         CLOUD_SCHEMA,
         id="test_simple_CLOUD_SCHEMA_single_region_no_az",
     ),
     pytest.param(
-        [{"cloud": "aws", "resources": [{"category": "compute", "id": "foo"}]}],
+        [{"cloud": "aws", "resources": {"foo": {"resource": "docker"}}}],
         MAP_SCHEMA,
         id="test_simple_map_schema_no_region",
     ),
     pytest.param(
-        [{"cloud": "aws", "regions": [{"region": "us-east-1", "resources": [{"category": "compute", "id": "foo"}]}]}],
+        [{"cloud": "aws", "regions": [{"region": "us-east-1", "resources": {"foo": {"resource": "docker"}}}]}],
         MAP_SCHEMA,
         id="test_simple_map_schema_single_region_no_az",
     ),

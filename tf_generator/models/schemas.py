@@ -1,10 +1,10 @@
-import json
 from typing import Dict
 
 from schema import Schema, And, Use, Optional, Or, SchemaError
 
 from config import CLOUD_PROVIDER_SETTINGS
-from models.high_level_items import HIGH_LEVEL_ITEM_TYPES, HIGH_LEVEL_BINDING_DIRECTIONS
+from models.high_level_items import HIGH_LEVEL_BINDING_DIRECTIONS
+from models.s3_templates import ResourceCategory
 
 DEFAULT_PROVIDER = "aws"
 
@@ -44,46 +44,49 @@ class CloudSchema(Schema):
         return data
 
 
+BINDING_SCHEMA = {
+    "id": str,
+    "direction": And(Use(str), lambda s: s in HIGH_LEVEL_BINDING_DIRECTIONS),
+}
+
 RESOURCE_SCHEMA = Schema(
     {
-        "category": And(Use(str), lambda s: s in HIGH_LEVEL_ITEM_TYPES),
-        "id": str,
-        Optional("bindings"): [
-            {
-                "id": str,
-                "direction": And(Use(str), lambda s: s in HIGH_LEVEL_BINDING_DIRECTIONS),
-            }
-        ],
-        Optional("params"): Or({str: object}, {}),
+        str: {
+            "resource": And(
+                Use(str),
+                Use(lambda s: s in ResourceCategory.values(), error=f'"Resource not recognised as valid resource'),
+            ),
+            Optional("bindings"): Optional([BINDING_SCHEMA]),
+            Optional("params"): Or({str: object}, {}),
+        }
     }
 )
+
+NETWORK_SCHEMA = {
+    "id": str,
+    Optional("availability_zones"): [str],
+    "resources": RESOURCE_SCHEMA,
+}
 
 REGION_SCHEMA = {
     "region": str,
     # If VPC isn't defined, assume everything is under a single network
-    Optional("networks"): [
-        {
-            Optional("name"): str,
-            Optional("availability_zones"): [str],
-            "resources": [RESOURCE_SCHEMA],
-        }
-    ],
-    Optional("resources"): [RESOURCE_SCHEMA],
+    # Optional("networks"): [NETWORK_SCHEMA],
+    Optional("resources"): RESOURCE_SCHEMA,
 }
 
 CLOUD_SCHEMA = CloudSchema(
     {
         "cloud": str,
         Optional("regions"): [REGION_SCHEMA],
-        Optional("resources"): [RESOURCE_SCHEMA],
+        Optional("region"): str,
+        Optional("resources"): RESOURCE_SCHEMA,
     },
 )
 
 MAP_SCHEMA = Schema(
-    [
-        Or(
-            CLOUD_SCHEMA,
-            RESOURCE_SCHEMA,
-        )
-    ]
+    Or(
+        [CLOUD_SCHEMA],
+        RESOURCE_SCHEMA,
+    )
 )

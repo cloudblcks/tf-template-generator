@@ -1,0 +1,35 @@
+- cloud: aws
+  resources:
+    db-postgres-prod:
+      resource: postgresql
+      bindings:
+        - direction: both
+          id: docker-server-prod
+        - direction: from
+          id: lambda-telegram-1
+        - direction: from
+          id: docker-discord-1
+
+    docker-server-prod:
+      resource: docker
+      bindings:
+        - direction: to
+          id: db-postgres-prod
+
+    lambda-telegram-1:
+      resource: docker
+      bindings:
+        - direction: to
+          id: db-postgres-prod
+
+    docker-discord-1:
+      resource: docker
+      bindings:
+        - direction: to
+          id: db-postgres-prod
+
+    s3-frontend:
+      resource: s3
+#      bindings:
+      params:
+        bucket: sample_frontend_01
