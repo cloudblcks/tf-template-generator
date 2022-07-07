@@ -1,7 +1,7 @@
 import itertools
 from dataclasses import dataclass
 from enum import auto
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 from strenum import LowercaseStrEnum
 
@@ -49,12 +49,12 @@ class HighLevelResource(JsonSerialisable):
         if not uid:
             uid = d.get("id")
 
-        bindings = [HighLevelBinding(target_key=x["id"], direction=x["direction"]) for x in d.get("bindings", [])]
+        # bindings = [HighLevelBinding(target_key=x["id"], direction=x["direction"]) for x in d.get("bindings", [])]
 
         return cls(
             uid=uid,
             key=d.get("resource"),
-            bindings=bindings,
+            bindings=[],
             params=d.get("params"),
         )
 
@@ -80,9 +80,8 @@ class HighLevelResource(JsonSerialisable):
 
 @dataclass
 class HighLevelBinding:
-    target_key: str
     direction: HighLevelBindingDirection
-    target: Optional[HighLevelResource] = None
+    target: HighLevelResource
 
 
 @dataclass
@@ -102,24 +101,38 @@ class HighLevelMap(JsonSerialisable):
             instance = cls(cloud_provider, {region: resources})
         else:
             resources = {}
+            bindings: List[Dict] = []
             for region_resources in d["regions"]:
                 region = region_resources.get("region")
-                resources[region] = cls._extract_resources(region_resources["resources"])
+                resources[region], new_bindings = cls._extract_resources(region_resources["resources"])
+                bindings.extend(new_bindings)
             instance = cls(cloud_provider, resources)
 
-        for r in instance.resources:
-            for binding in r.bindings:
-                if not binding.target:
-                    binding.target = instance.get(binding.target_key)
+        for binding in bindings:
+            resource = instance.get(binding["from"])
+            resource.bindings.append(
+                HighLevelBinding(target=instance.get(binding["to"]), direction=binding["direction"])
+            )
+        # for r in instance.resources:
+        #     for binding in r.bindings:
+        #         if not binding.target:
+        #             binding.target = instance.get(binding.target_key)
 
         return instance
 
     @staticmethod
-    def _extract_resources(d: Dict) -> List[HighLevelResource]:
-        resources: [HighLevelResource] = []
+    def _extract_resources(d: Dict) -> Tuple[List[HighLevelResource], List[Dict]]:
+        resources: List[HighLevelResource] = []
+        bindings: List[Dict] = []
         for key, value in d.items():
             resources.append(HighLevelResource.from_dict(value, uid=key))
-        return resources
+            bindings.extend(
+                [
+                    {"from": key, "to": binding["id"], "direction": binding["direction"]}
+                    for binding in value.get("bindings", [])
+                ]
+            )
+        return resources, bindings
 
     @staticmethod
     def _get_resource_from_key(resources: List[HighLevelResource], uid: str) -> HighLevelResource:
@@ -132,6 +145,9 @@ class HighLevelMap(JsonSerialisable):
     @property
     def resources(self) -> List[HighLevelResource]:
         return list(itertools.chain(*self.region_resources.values()))
+
+    def __getitem__(self, item):
+        return self.get(item)
 
     def get(self, uid: str, region: Optional[str] = None) -> HighLevelResource:
         if region:
