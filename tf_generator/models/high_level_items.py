@@ -114,11 +114,6 @@ class HighLevelMap(JsonSerialisable):
             resource.bindings.append(
                 HighLevelBinding(target=instance.get(binding["to"]), direction=binding["direction"])
             )
-        # for r in instance.resources:
-        #     for binding in r.bindings:
-        #         if not binding.target:
-        #             binding.target = instance.get(binding.target_key)
-
         return instance
 
     @staticmethod
