@@ -95,13 +95,14 @@ class HighLevelMap(JsonSerialisable):
         cloud_provider_config = CLOUD_PROVIDER_SETTINGS.get(cloud_provider)
 
         region = d.get("region", cloud_provider_config.default_region)
-
+        bindings: List[Dict] = []
         if "regions" not in d:
-            resources = cls._extract_resources(d["resources"])
+            resources, new_bindings = cls._extract_resources(d["resources"])
+            bindings.extend(new_bindings)
             instance = cls(cloud_provider, {region: resources})
+
         else:
             resources = {}
-            bindings: List[Dict] = []
             for region_resources in d["regions"]:
                 region = region_resources.get("region")
                 resources[region], new_bindings = cls._extract_resources(region_resources["resources"])
