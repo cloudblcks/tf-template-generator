@@ -12,8 +12,9 @@
     "params": [
       {
         "param": "bucket_name",
-        "description": "Unique identifier for the bucket. Must be unique across all AWS accounts",
-        "data_type": "string"
+        "description": "Unique identifier for the bucket. Must be unique across all AWS accounts. If not provided, default name will be generated",
+        "data_type": "string",
+        "required": false
       }
     ]
   },

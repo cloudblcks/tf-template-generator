@@ -30,6 +30,3 @@
 
     s3-frontend:
       resource: s3
-#      bindings:
-      params:
-        bucket_name: sample_frontend_01
