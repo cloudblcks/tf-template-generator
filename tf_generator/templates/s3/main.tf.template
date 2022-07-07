@@ -1,4 +1,4 @@
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
-  bucket = var.bucket_name-{{ uid }}
+  bucket = {{ bucket_name }}
 }
 

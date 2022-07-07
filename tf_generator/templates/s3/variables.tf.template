@@ -1,3 +1,0 @@
-variable "bucket_name-{{ uid }}" {
-  description = "Bucket name for frontend in AWS S3"
-}

@@ -13,5 +13,6 @@ python-dotenv==0.20.0
 pyyaml==6.0
 schema==0.7.5
 strenum==0.4.7
+petname==2.6
 # cdktf==0.11.2
 # cdktf_cdktf_provider_aws==8.0.9

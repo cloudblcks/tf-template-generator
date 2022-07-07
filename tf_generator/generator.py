@@ -151,8 +151,12 @@ class TerraformGenerator:
             self.add_low_level_item(s3)
             break
         if not s3:
-            s3 = S3(storage.uid)
-            self.add_low_level_item(s3)
+            if "bucket_name" in storage.params:
+                bucket_name = storage.params["bucket_name"]
+                assert isinstance(bucket_name, str)
+                self.add_low_level_item(S3(storage.uid, bucket_name))
+            else:
+                self.add_low_level_item(S3(storage.uid))
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False

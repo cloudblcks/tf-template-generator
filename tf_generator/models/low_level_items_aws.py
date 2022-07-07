@@ -2,6 +2,7 @@ import os
 import uuid
 from dataclasses import dataclass
 from typing import Optional, Dict, Set, List
+import petname
 
 from jinja2 import Template
 
@@ -133,15 +134,17 @@ class RDS(LowLevelDBItem):
 
 
 class S3(LowLevelStorageItem):
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set["LowLevelAWSItem"] = None):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/s3/main.tf.template")
         self.variables = load_template("templates/s3/variables.tf.template")
+        if not bucket_name:
+            bucket_name = "s3-" + new_id + petname.Generate(3)
+        self.bucket_name = bucket_name
 
     def generate_config(self) -> TerraformConfig:
-        out_template = self.template.render({"uid": self.uid})
-        out_variables = self.variables.render({"uid": self.uid})
-        return TerraformConfig(out_template, out_variables, "")
+        out_template = self.template.render({"uid": self.uid, "bucket_name": self.bucket_name})
+        return TerraformConfig(out_template, "", "")
 
 
 class S3PublicWebsite(LowLevelStorageItem):
