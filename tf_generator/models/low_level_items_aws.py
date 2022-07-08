@@ -50,19 +50,23 @@ class LowLevelSharedItem(LowLevelAWSItem):
 
 
 class VPC(LowLevelSharedItem):
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, num_of_azs: Optional[int], depends_on: Set["LowLevelAWSItem"] = None):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/vpc/main.tf.template")
-        self.variables = load_template("templates/vpc/variables.tf.template")
+        if not num_of_azs:
+            num_of_azs = 2
+        self.azs: List[str] = ["a", "b", "c"][:num_of_azs]
+        self.subnet_cidrs: List[str] = []
+        for i in range(num_of_azs):
+            self.subnet_cidrs.append(f"10.0.{ i + 1 }.0/24")
 
     def generate_config(self) -> TerraformConfig:
         out_template = ""
-        out_variables = ""
         if self.template:
-            out_template = self.template.render({"vpc_uid": self.uid})
-        if self.variables:
-            out_variables = self.variables.render({"vpc_uid": self.uid})
-        return TerraformConfig(out_template, out_variables, "")
+            out_template = self.template.render(
+                {"vpc_uid": self.uid, "azs": self.azs, "subnet_cidrs": self.subnet_cidrs}
+            )
+        return TerraformConfig(out_template, "", "")
 
 
 class LowLevelComputeItem(LowLevelAWSItem):
@@ -104,13 +108,15 @@ class EC2Docker(LowLevelComputeItem):
         aws_ec2_instance_type: str,
         image_url: str,
         container_name: str,
+        volume_path: str,
+        volume_name: str,
         healthcheck_path: str,
         autoscale_min: int,
         autoscale_max: int,
         autoscale_target: int,
-        cpu_cores: int = 10,
-        memory: int = 512,
-        desired_count: int = 1,
+        cpu_cores: Optional[int] = None,
+        memory: Optional[int] = None,
+        desired_count: Optional[int] = None,
         aws_ecs_cluster_name: Optional[str] = None,
         ssh_pubkey: Optional[str] = None,
         needs_internet_access=False,
@@ -135,8 +141,14 @@ class EC2Docker(LowLevelComputeItem):
         self.aws_ec2_instance_type = aws_ec2_instance_type
         self.task_definition_family_name = f"taskdef-{new_id}-{petname.Generate(3)}"
         self.image_url = image_url
+        if not cpu_cores:
+            cpu_cores = 10
         self.cpu_cores = cpu_cores
+        if not memory:
+            memory = 512
         self.memory = memory
+        if not desired_count:
+            desired_count = 1
         self.desired_count = desired_count
         self.healthcheck_path = healthcheck_path
         self.autoscale_min = autoscale_min
@@ -144,6 +156,8 @@ class EC2Docker(LowLevelComputeItem):
         self.autoscale_target = autoscale_target
         self.ssh_pubkey = ssh_pubkey
         self.container_name = container_name
+        self.volume_path = volume_path
+        self.volume_name = volume_name
 
     def generate_config(self) -> TerraformConfig:
         out_template = ""
@@ -167,6 +181,8 @@ class EC2Docker(LowLevelComputeItem):
                     "autoscale_target": self.autoscale_target,
                     "ssh_pubkey": self.ssh_pubkey,
                     "container_name": self.container_name,
+                    "volume_path": self.volume_path,
+                    "volume_name": self.volume_name,
                 }
             )
 

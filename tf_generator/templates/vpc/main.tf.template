@@ -4,36 +4,8 @@ resource "aws_vpc" "vpc-{{ vpc_uid }}" {
   enable_dns_hostnames = true
 }
 
-# Public subnets
+data "aws_region" "current" {}
 
-resource "aws_subnet" "public-subnet-1-{{ vpc_uid }}" {
-  cidr_block        = var.public_subnet_1_cidr
-  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = var.availability_zones[0]
-}
-
-resource "aws_subnet" "public-subnet-2-{{ vpc_uid }}" {
-  cidr_block        = var.public_subnet_2_cidr
-  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = var.availability_zones[1]
-}
-
-# Private subnets
-
-resource "aws_subnet" "private-subnet-1-{{ vpc_uid }}" {
-  cidr_block        = var.private_subnet_1_cidr
-  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = var.availability_zones[0]
-}
-
-resource "aws_subnet" "private-subnet-2-{{ vpc_uid }}" {
-  cidr_block        = var.private_subnet_2_cidr
-  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = var.availability_zones[1]
-}
-
-
-# Subnet route tables
 resource "aws_route_table" "public-route-table-{{ vpc_uid }}" {
   vpc_id = aws_vpc.vpc-{{ vpc_uid }}.id
 }
@@ -41,23 +13,31 @@ resource "aws_route_table" "private-route-table-{{ vpc_uid }}" {
   vpc_id = aws_vpc.vpc-{{ vpc_uid }}.id
 }
 
-# Associate the newly created route tables to the subnets
-resource "aws_route_table_association" "public-route-1-association-{{ vpc_uid }}" {
+{% for az in azs %}
+
+resource "aws_subnet" "public-subnet-{{ loop.index }}-{{ vpc_uid }}" {
+  cidr_block        = {{ subnet_cidrs[loop.index0] }}
+  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
+  availability_zone = format("%s%s", aws_region.current, az)
+}
+
+resource "aws_subnet" "private-subnet-{{ loop.index }}-{{ vpc_uid }}" {
+  cidr_block        = {{ subnet_cidrs[loop.index0] }}
+  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
+  availability_zone = format("%s%s", aws_region.current, az)
+}
+
+resource "aws_route_table_association" "public-route-{{ loop.index }}-association-{{ vpc_uid }}" {
   route_table_id = aws_route_table.public-route-table-{{ vpc_uid }}.id
-  subnet_id      = aws_subnet.public-subnet-1-{{ vpc_uid }}.id
+  subnet_id      = aws_subnet.public-subnet-{{ loop.index }}-{{ vpc_uid }}.id
 }
-resource "aws_route_table_association" "public-route-2-association-{{ vpc_uid }}" {
-  route_table_id = aws_route_table.public-route-table-{{ vpc_uid }}.id
-  subnet_id      = aws_subnet.public-subnet-2-{{ vpc_uid }}.id
-}
-resource "aws_route_table_association" "private-route-1-association-{{ vpc_uid }}" {
+
+resource "aws_route_table_association" "private-route-{{ loop.index }}-association-{{ vpc_uid }}" {
   route_table_id = aws_route_table.private-route-table-{{ vpc_uid }}.id
-  subnet_id      = aws_subnet.private-subnet-1-{{ vpc_uid }}.id
+  subnet_id      = aws_subnet.private-subnet-{{ loop.index }}-{{ vpc_uid }}.id
 }
-resource "aws_route_table_association" "private-route-2-association-{{ vpc_uid }}_" {
-  route_table_id = aws_route_table.private-route-table-{{ vpc_uid }}.id
-  subnet_id      = aws_subnet.private-subnet-2-{{ vpc_uid }}.id
-}
+
+{% endfor %}
 
 # Public Subnet Internet Gateway
 resource "aws_internet_gateway" "igw-{{ vpc_uid }}" {

@@ -170,7 +170,11 @@ class TerraformGenerator:
                 vpc = linked_compute.vpc
                 break
         if not vpc:
-            vpc = VPC(generate_id())
+            num_of_azs: Optional[int] = None
+            if "num_of_azs" in compute.params:
+                assert str(compute.params["num_of_azs"]).isnumeric()
+                num_of_azs = int(str(compute.params["num_of_azs"]))
+            vpc = VPC(generate_id(), num_of_azs=num_of_azs)
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
@@ -200,14 +204,17 @@ class TerraformGenerator:
         assert isinstance(compute.params["container_name"], str)
         container_name: str = compute.params["container_name"]
 
+        cpu_cores: Optional[int] = None
         if "cpu_cores" in compute.params:
             assert str(compute.params["cpu_cores"]).isnumeric()
             cpu_cores = int(str(compute.params["cpu_cores"]))
 
+        memory: Optional[int] = None
         if "memory" in compute.params:
             assert str(compute.params["memory"]).isnumeric()
             memory = int(str(compute.params["memory"]))
 
+        desired_count: Optional[int] = None
         if "desired_count" in compute.params:
             assert str(compute.params["desired_count"]).isnumeric()
             desired_count = int(str(compute.params["desired_count"]))
@@ -224,6 +231,7 @@ class TerraformGenerator:
         assert str(compute.params["autoscale_target"]).isnumeric()
         autoscale_target = int(str(compute.params["autoscale_target"]))
 
+        ssh_pubkey: Optional[str] = None
         if "ssh_pubkey" in compute.params:
             assert isinstance(compute.params["ssh_pubkey"], str)
             ssh_pubkey = compute.params["ssh_pubkey"]
@@ -231,6 +239,12 @@ class TerraformGenerator:
         if "is_public" in compute.params:
             assert str(compute.params["is_public"]).isnumeric()
             needs_internet_access = bool(str(compute.params["is_public"]))
+
+        assert isinstance(compute.params["volume_path"], str)
+        volume_path: str = compute.params["volume_path"]
+
+        assert isinstance(compute.params["volume_name"], str)
+        volume_name: str = compute.params["volume_name"]
 
         ec2 = EC2Docker(
             compute.uid,
@@ -241,6 +255,8 @@ class TerraformGenerator:
             aws_ecs_cluster_name=cluster_name,
             image_url=image_url,
             container_name=container_name,
+            volume_path=volume_path,
+            volume_name=volume_name,
             cpu_cores=cpu_cores,
             memory=memory,
             desired_count=desired_count,

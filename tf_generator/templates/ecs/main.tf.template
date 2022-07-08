@@ -155,8 +155,8 @@ resource "aws_ecs_task_definition" "task_definition-{{ uid }}" {
 ]
   EOT
   volume {
-    name      = "${var.container_volume_name-{{ uid }}}"
-    host_path = "${var.container_volume_path-{{ uid }}}"
+    name      = {{ volume_name }}
+    host_path = {{ volume_path }}
   }
 }
 
