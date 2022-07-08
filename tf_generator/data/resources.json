@@ -28,7 +28,93 @@
       "compute",
       "cloud-agnostic"
     ],
-    "description": "Generic docker container running in the cloud"
+    "description": "Generic docker container running in the cloud",
+    "params": [
+      {
+        "param": "aws_ecs_cluster_name",
+        "description": "ECS cluster name",
+        "data_type": "string",
+        "required": false
+      },
+      {
+        "param": "aws_ami",
+        "description": "AWS AMI to spawn for the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "aws_instance_type",
+        "description": "AWS EC2 Instance type to use for the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "container_name",
+        "description": "Docker container name",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "image_url",
+        "description": "URL for the Docker image to be deployed",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "cpu_cores",
+        "description": "Number of CPU cores needed",
+        "data_type": "number",
+        "required": false
+      },
+      {
+        "param": "memory",
+        "description": "Amount of memory needed for the container, in MB",
+        "data_type": "number",
+        "required": false
+      },
+      {
+        "param": "desired_count",
+        "description": "Number of Docker containers to run",
+        "data_type": "number",
+        "required": false
+      },
+      {
+        "param": "healthcheck_path",
+        "description": "Healthcheck path for the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "autoscale_min",
+        "description": "Minimum autoscale (number of EC2 instances)",
+        "data_type": "number",
+        "required": true
+      },
+      {
+        "param": "autoscale_max",
+        "description": "Maximum autoscale (number of EC2 instances)",
+        "data_type": "number",
+        "required": true
+      },
+      {
+        "param": "autoscale_target",
+        "description": "Target autoscale (number of EC2 instances)",
+        "data_type": "number",
+        "required": true
+      },
+      {
+        "param": "ssh_pubkey",
+        "description": "Path to an SSH public key, default \"~/.ssh/id_rsa.pub\"",
+        "data_type": "string",
+        "required": false
+      },
+      {
+        "param": "is_public",
+        "description": "Wether container should exposed to the internet, default false",
+        "data_type": "bool",
+        "required": false
+      }
+    ]
   },
   {
     "key": "postgresql",

@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "ecs_cluster_name-{{ uid }}" {
-  name = var.ecs_cluster_name-{{ uid }}
+  name = {{ aws_ecs_cluster_name }}
 }
 
 # ALB Security Group (Traffic Internet -> ALB)
@@ -103,31 +103,31 @@ resource "aws_iam_instance_profile" "ecs-{{ uid }}_instance_profile" {
 }
 
 resource "aws_key_pair" "ssh_key-{{ uid }}" {
-  public_key = file(var.ssh_pubkey_file-{{ uid }})
+  public_key = file({{ ssh_pubkey }})
 }
 
 resource "aws_launch_configuration" "ecs-{{ uid }}_launch_configuration" {
-  name                        = var.ecs_cluster_name-{{ uid }}
-  image_id                    = var.ami-{{ uid }}
-  instance_type               = var.instance_type-{{ uid }}
+  name                        = {{ aws_ecs_cluster_name }}
+  image_id                    = {{ aws_ami }}
+  instance_type               = {{ aws_ec2_instance_type }}
   security_groups             = [aws_security_group.ecs-{{ uid }}.id]
   iam_instance_profile        = aws_iam_instance_profile.ecs-{{ uid }}_instance_profile.name
   key_name                    = aws_key_pair.ssh_key-{{ uid }}.key_name
   associate_public_ip_address = true
-  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${var.ecs_cluster_name-{{ uid }}}' > /etc/ecs/ecs.config"
+  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${{{ aws_ecs_cluster_name }}}' > /etc/ecs/ecs.config"
 }
 
 
 resource "aws_ecs_task_definition" "task_definition-{{ uid }}" {
-  family                = var.task_definition_family-{{ uid }}
+  family                = {{ task_definition_family_name }}
   container_definitions = <<EOT
   [
   {
-    "name": "${var.container_name-{{ uid }}}",
-    "image": "${var.docker_image_url-{{ uid }}_django}",
+    "name": {{ container_name }},
+    "image": {{ image_url }},
     "essential": true,
-    "cpu": $var.container_cpu-{{ uid }},
-    "memory": $var.container_cpu-{{ uid }},
+    "cpu": {{ cpu_cores }},
+    "memory": {{ memory }},
     "links": [],
     "portMappings": [/*
       {
@@ -146,9 +146,9 @@ resource "aws_ecs_task_definition" "task_definition-{{ uid }}" {
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/${var.container_name-{{ uid }}}",
+        "awslogs-group": "/ecs/{{ container_name }}",
         "awslogs-region": "${region}",
-        "awslogs-stream-prefix": "${var.container_name-{{ uid }}}_log_stream"
+        "awslogs-stream-prefix": "{{ container_name }}_log_stream"
       }
     }
   }
@@ -216,10 +216,6 @@ resource "aws_lb" "aws_alb-{{ uid }}" {
   subnets            = [aws_subnet.public-subnet-1-{{ vpc_uid }}.id, aws_subnet.public-subnet-2-{{ vpc_uid }}.id]
 }
 
-/*data "aws_acm_certificate" "ssl_certificate" {
-  domain   = var.domain_name
-}*/
-
 # Target group
 resource "aws_alb_target_group" "default-target-group-{{ uid }}" {
   port     = 80
@@ -227,7 +223,7 @@ resource "aws_alb_target_group" "default-target-group-{{ uid }}" {
   vpc_id   = aws_vpc.vpc-{{ vpc_uid }}.id
 
   health_check {
-    path                = var.healthcheck_path-{{ uid }}
+    path                = {{ healthcheck_path }}
     port                = "traffic-port"
     healthy_threshold   = 5
     unhealthy_threshold = 2
@@ -257,12 +253,12 @@ resource "aws_ecs_service" "ecs_service-{{ uid }}" {
   cluster         = aws_ecs_cluster.ecs_cluster_name-{{ uid }}.id
   task_definition = aws_ecs_task_definition.task_definition-{{ uid }}.arn
   iam_role        = aws_iam_role.ecs-{{ uid }}-service-role.arn
-  desired_count   = var.app_count-{{ uid }}
+  desired_count   = {{ desired_count }}
   depends_on      = [aws_alb_listener.ecs-alb-http-listener-{{ uid }}, aws_iam_role_policy.ecs-{{ uid }}-service-role-policy]
 
   load_balancer {
     target_group_arn = aws_alb_target_group.default-target-group-{{ uid }}.arn
-    container_name   = var.container_name-{{ uid }}
+    container_name   = {{ container_name }}
     container_port   = 80
   }
 }
@@ -272,9 +268,9 @@ resource "aws_ecs_service" "ecs_service-{{ uid }}" {
 # Autoscaling
 ###############
 resource "aws_autoscaling_group" "autoscaling_group-{{ uid }}" {
-  min_size             = var.autoscale_min-{{ uid }}
-  max_size             = var.autoscale_max-{{ uid }}
-  desired_capacity     = var.autoscale_desired-{{ uid }}
+  min_size             = {{ autoscale_min }}
+  max_size             = {{ autoscale_max }}
+  desired_capacity     = {{ autoscale_target }}
   health_check_type    = "EC2"
   launch_configuration = aws_launch_configuration.ecs-{{ uid }}_launch_configuration.name
   vpc_zone_identifier  = [aws_subnet.private-subnet-1-{{ vpc_uid }}.id, aws_subnet.private-subnet-2-{{ vpc_uid }}.id]
