@@ -50,13 +50,25 @@ class LowLevelSharedItem(LowLevelAWSItem):
 
 
 class VPC(LowLevelSharedItem):
-    def __init__(self, new_id: str, num_of_azs: Optional[int], depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(
+        self,
+        new_id: str,
+        num_of_azs: Optional[int],
+        is_public: bool = False,
+        depends_on: Set["LowLevelAWSItem"] = None,
+    ):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/vpc/main.tf.template")
         if not num_of_azs:
             num_of_azs = 2
         self.azs: List[str] = ["a", "b", "c"][:num_of_azs]
         self.subnet_cidrs: List[str] = []
+        if is_public:
+            self.has_public_subnet = True
+            self.has_private_subnet = False
+        else:
+            self.has_public_subnet = False
+            self.has_private_subnet = True
         for i in range(num_of_azs):
             self.subnet_cidrs.append(f"10.0.{ i + 1 }.0/24")
 
@@ -64,7 +76,13 @@ class VPC(LowLevelSharedItem):
         out_template = ""
         if self.template:
             out_template = self.template.render(
-                {"vpc_uid": self.uid, "azs": self.azs, "subnet_cidrs": self.subnet_cidrs}
+                {
+                    "vpc_uid": self.uid,
+                    "azs": self.azs,
+                    "subnet_cidrs": self.subnet_cidrs,
+                    "has_public_subnet": self.has_public_subnet,
+                    "has_private_subnet": self.has_private_subnet,
+                }
             )
         return TerraformConfig(out_template, "", "")
 
@@ -302,14 +320,20 @@ class TerraformGeneratorAWS:
         for item in self.ll_list:
             if len(item.depends_on) > 0:
                 for dep in item.depends_on:
-                    out_outputs, out_template, out_variables = compile_item(
+                    add_outputs, add_template, add_variables = compile_item(
                         compiled, dep, out_outputs, out_template, out_variables
                     )
+                    out_template += add_template
+                    out_outputs += add_outputs
+                    out_variables += add_variables
             # checking one more time in case it was already generated via dependencies
             if not compiled[item.uid]:
-                out_outputs, out_template, out_variables = compile_item(
+                add_outputs, add_template, add_variables = compile_item(
                     compiled, item, out_outputs, out_template, out_variables
                 )
+                out_template += add_template
+                out_outputs += add_outputs
+                out_variables += add_variables
 
         out = ServiceTemplate(
             service_name="All services",

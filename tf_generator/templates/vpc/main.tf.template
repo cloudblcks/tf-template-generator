@@ -6,10 +6,8 @@ resource "aws_vpc" "vpc-{{ vpc_uid }}" {
 
 data "aws_region" "current" {}
 
+{% if has_public_subnet %}
 resource "aws_route_table" "public-route-table-{{ vpc_uid }}" {
-  vpc_id = aws_vpc.vpc-{{ vpc_uid }}.id
-}
-resource "aws_route_table" "private-route-table-{{ vpc_uid }}" {
   vpc_id = aws_vpc.vpc-{{ vpc_uid }}.id
 }
 
@@ -21,20 +19,9 @@ resource "aws_subnet" "public-subnet-{{ loop.index }}-{{ vpc_uid }}" {
   availability_zone = format("%s%s", aws_region.current, az)
 }
 
-resource "aws_subnet" "private-subnet-{{ loop.index }}-{{ vpc_uid }}" {
-  cidr_block        = {{ subnet_cidrs[loop.index0] }}
-  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = format("%s%s", aws_region.current, az)
-}
-
 resource "aws_route_table_association" "public-route-{{ loop.index }}-association-{{ vpc_uid }}" {
   route_table_id = aws_route_table.public-route-table-{{ vpc_uid }}.id
   subnet_id      = aws_subnet.public-subnet-{{ loop.index }}-{{ vpc_uid }}.id
-}
-
-resource "aws_route_table_association" "private-route-{{ loop.index }}-association-{{ vpc_uid }}" {
-  route_table_id = aws_route_table.private-route-table-{{ vpc_uid }}.id
-  subnet_id      = aws_subnet.private-subnet-{{ loop.index }}-{{ vpc_uid }}.id
 }
 
 {% endfor %}
@@ -69,3 +56,30 @@ resource "aws_route" "public-internet-igw-route-{{ vpc_uid }}" {
   gateway_id             = aws_internet_gateway.igw-{{ vpc_uid }}.id
   destination_cidr_block = "0.0.0.0/0"
 }
+
+
+{% endif %}
+
+{% if has_private_subnet %}
+resource "aws_route_table" "private-route-table-{{ vpc_uid }}" {
+  vpc_id = aws_vpc.vpc-{{ vpc_uid }}.id
+}
+
+{% for az in azs %}
+
+resource "aws_subnet" "private-subnet-{{ loop.index }}-{{ vpc_uid }}" {
+  cidr_block        = {{ subnet_cidrs[loop.index0] }}
+  vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
+  availability_zone = format("%s%s", aws_region.current, az)
+}
+
+
+
+resource "aws_route_table_association" "private-route-{{ loop.index }}-association-{{ vpc_uid }}" {
+  route_table_id = aws_route_table.private-route-table-{{ vpc_uid }}.id
+  subnet_id      = aws_subnet.private-subnet-{{ loop.index }}-{{ vpc_uid }}.id
+}
+
+{% endfor %}
+
+{% endif %}

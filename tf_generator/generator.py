@@ -161,6 +161,9 @@ class TerraformGenerator:
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
+        if "is_public" in compute.params:
+            assert compute.params["is_public"] in ["true", "false"]
+            needs_internet_access = bool(compute.params["is_public"])
         vpc: Optional[VPC] = None
         for item in (
             x
@@ -171,13 +174,15 @@ class TerraformGenerator:
                 linked_compute = self.ll_map[item.target.uid]
                 assert isinstance(linked_compute, LowLevelComputeItem)
                 vpc = linked_compute.vpc
+                if needs_internet_access:
+                    vpc.has_public_subnet = True
                 break
         if not vpc:
             num_of_azs: Optional[int] = None
             if "num_of_azs" in compute.params:
                 assert str(compute.params["num_of_azs"]).isnumeric()
                 num_of_azs = int(str(compute.params["num_of_azs"]))
-            vpc = VPC(generate_id(), num_of_azs=num_of_azs)
+            vpc = VPC(generate_id(), num_of_azs=num_of_azs, is_public=needs_internet_access)
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
@@ -201,10 +206,6 @@ class TerraformGenerator:
         if "instance_count" in compute.params:
             assert str(compute.params["instance_count"]).isnumeric()
             instance_count = int(str(compute.params["instance_count"]))
-
-        if "is_public" in compute.params:
-            assert compute.params["is_public"] in ["true", "false"]
-            needs_internet_access = bool(compute.params["is_public"])
 
         user_data: Optional[str] = None
         if "user_data" in compute.params:
