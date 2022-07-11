@@ -9,6 +9,20 @@
         aws_ecs_cluster_name = clustername1
         aws_instance_type = t2.micro
         aws_ami = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+        image_url = https://hub.docker.com/r/clickhouse/clickhouse-server/
+        container_name = clickhouse-server
+        cpu_cores = 10
+        memory = 2048
+        desired_count = 1
+        healthcheck_path = some-path
+        autoscale_min = 1
+        autoscale_max = 10
+        autoscale_target = 3
+        ssh_pubkey = ~/.ssh/id_rsa.pub
+        is_public = true
+        num_of_azs = 2
+        volume_name = root
+        volume_path = /var/lib/clickhouse/
 
     s3-frontend:
       resource: s3
