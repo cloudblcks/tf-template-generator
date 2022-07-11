@@ -19,6 +19,42 @@
     ]
   },
   {
+    "key": "VM",
+    "category": "compute",
+    "clouds": [
+      "aws"
+    ],
+    "tags": [
+      "compute",
+      "cloud-agnostic"
+    ],
+    "description": "Generic VM hosted in the cloud (i.e. EC2)",
+    "params": [
+      {
+        "param": "aws_ami",
+        "description": "AWS AMI to spawn for the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "aws_instance_type",
+        "description": "AWS EC2 Instance type to use for the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "user_data",
+        "description": "User data to be used to configure the VM when it is launched",
+        "data_type": "string",
+        "required": false
+      },
+      {
+        "param": "instance_count",
+        "description": "Number of EC2 "
+      }
+    ]
+  },
+  {
     "key": "docker",
     "category": "compute",
     "clouds": [
@@ -129,6 +165,12 @@
       {
         "param": "volume_path",
         "description": "Path to the volume in the container",
+        "data_type": "string",
+        "required": true
+      },
+      {
+        "param": "container_definition",
+        "description": "ContainerDefinition JSON: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html",
         "data_type": "string",
         "required": true
       }
