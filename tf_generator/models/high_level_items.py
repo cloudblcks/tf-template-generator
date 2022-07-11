@@ -71,7 +71,7 @@ class HighLevelResource(JsonSerialisable):
     def linked_compute(self, input_map: Dict[str, LowLevelAWSItem]) -> List[LowLevelComputeItem]:
         out = []
         for x in self.bindings:
-            if x.target.category == ResourceCategory.COMPUTE and x.target.uid in list(input_map):
+            if x.target.category == ResourceCategory.DOCKER and x.target.uid in list(input_map):
                 item = input_map[x.target.uid]
                 assert isinstance(item, LowLevelComputeItem)
                 out.append(item)

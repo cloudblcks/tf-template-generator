@@ -2,6 +2,7 @@ import json
 from typing import Dict
 
 import pytest
+
 from models.s3_templates import (
     ProviderServiceTemplates,
     ProviderTemplate,
@@ -47,14 +48,14 @@ TEST_DATA_PROVIDER_SERVICE_TEMPLATES_FROM_JSON = [
 
 TEST_DATA_SERVICE_CATEGORIES_TO_DICT = [
     ({ServiceProvider.AWS: ProviderTemplate(ServiceProvider.AWS, "bar")},
-     {ResourceCategory.COMPUTE: ServiceCategoryProviders(
+     {ResourceCategory.DOCKER: ServiceCategoryProviders(
          {ServiceProvider.AWS: ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})})},
      {"providers": {"aws": {"name": "aws", "uri": "bar"}},
       "compute": {
           "aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}}),
     ({ServiceProvider.AWS: ProviderTemplate(ServiceProvider.AWS, "bar"),
       ServiceProvider.GCP: ProviderTemplate(ServiceProvider.GCP, "ipsum")},
-     {ResourceCategory.COMPUTE: ServiceCategoryProviders(
+     {ResourceCategory.DOCKER: ServiceCategoryProviders(
          {ServiceProvider.AWS: ProviderServiceTemplates({"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})}),
          ResourceCategory.STORAGE: ServiceCategoryProviders(
              {ServiceProvider.AWS: ProviderServiceTemplates(
@@ -69,7 +70,7 @@ TEST_DATA_SERVICE_CATEGORIES_FROM_JSON = [
     ('''{"providers": {"aws": {"name": "aws", "uri": "bar"}},
     "compute": {"aws": {"ecs": {"service_name": "ecs", "uri": "foo", "outputs_uri": "bar", "variables_uri": "derp"}}}}''',
      ServiceCategories({ServiceProvider.AWS: ProviderTemplate(ServiceProvider.AWS, "bar")},
-                       {ResourceCategory.COMPUTE: ServiceCategoryProviders(
+                       {ResourceCategory.DOCKER: ServiceCategoryProviders(
                            {ServiceProvider.AWS: ProviderServiceTemplates(
                                {"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})})})),
     ('''{"providers": {"aws": {"name": "aws", "uri": "bar"}, "gcp": {"name": "gcp", "uri": "ipsum"}},
@@ -77,7 +78,7 @@ TEST_DATA_SERVICE_CATEGORIES_FROM_JSON = [
     "storage": {"gcp": {"ec2": {"service_name": "ec2", "uri": "s3://foo", "outputs_uri": "s3://bar", "variables_uri": "s3://derp"}}}}''',
      ServiceCategories({ServiceProvider.AWS: ProviderTemplate(ServiceProvider.AWS, "bar"),
                         "gcp": ProviderTemplate(ServiceProvider.GCP, "ipsum")}, {
-                           ResourceCategory.COMPUTE: ServiceCategoryProviders(
+                           ResourceCategory.DOCKER: ServiceCategoryProviders(
                                {ServiceProvider.AWS: ProviderServiceTemplates(
                                    {"ecs": ServiceTemplate("ecs", "foo", "bar", "derp")})}),
                            ResourceCategory.STORAGE: ServiceCategoryProviders(

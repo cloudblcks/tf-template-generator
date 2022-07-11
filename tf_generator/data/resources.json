@@ -50,7 +50,21 @@
       },
       {
         "param": "instance_count",
-        "description": "Number of EC2 "
+        "description": "Number of EC2 instances, default 1",
+        "data_type": "number",
+        "required": false
+      },
+      {
+        "param": "is_public",
+        "description": "Wether container should exposed to the internet, default false",
+        "data_type": "bool",
+        "required": false
+      },
+      {
+        "param": "num_of_azs",
+        "description": "Number of Availability Zones to be used by the deployment, default 2",
+        "data_type": "number",
+        "required": false
       }
     ]
   },

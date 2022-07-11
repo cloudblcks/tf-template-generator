@@ -19,6 +19,7 @@ from models.low_level_items_aws import (
     LowLevelStorageItem,
     S3,
     LowLevelComputeItem,
+    EC2,
 )
 from models.s3_templates import (
     ProviderTemplate,
@@ -66,9 +67,7 @@ class TerraformGenerator:
         templates = {}
 
         if compute_service:
-            templates[ResourceCategory.COMPUTE] = self.templates.get(
-                ResourceCategory.COMPUTE, provider, compute_service
-            )
+            templates[ResourceCategory.DOCKER] = self.templates.get(ResourceCategory.DOCKER, provider, compute_service)
         if serverless_service:
             templates[ResourceCategory.SERVERLESS] = self.templates.get(
                 ResourceCategory.SERVERLESS, provider, serverless_service
@@ -133,8 +132,8 @@ class TerraformGenerator:
     def generate_low_level_aws_map(self, input_arr: HighLevelMap):
         for item in input_arr.resources:
             if item.uid not in self.ll_map:
-                if item.category == ResourceCategory.COMPUTE:
-                    self.high_to_low_mapping_compute(item)
+                if item.category == ResourceCategory.DOCKER:
+                    self.high_to_low_mapping_docker(item)
                 elif item == ResourceCategory.DATABASE:
                     self.high_to_low_mapping_db(item)
                 elif item.category == ResourceCategory.STORAGE:
@@ -160,10 +159,12 @@ class TerraformGenerator:
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
-        # for _ in (x for x in compute.bindings if x.target.category == ResourceCategory.INTERNET):
-        #     needs_internet_access = True
         vpc: Optional[VPC] = None
-        for item in (x for x in compute.bindings if x.target.category == ResourceCategory.COMPUTE):
+        for item in (
+            x
+            for x in compute.bindings
+            if (x.target.category == ResourceCategory.COMPUTE or x.target.category == ResourceCategory.DOCKER)
+        ):
             if item.target.uid in self.ll_map:
                 linked_compute = self.ll_map[item.target.uid]
                 assert isinstance(linked_compute, LowLevelComputeItem)
@@ -187,10 +188,6 @@ class TerraformGenerator:
                 storage = self.ll_map[item.target.uid]
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
-        cluster_name: Optional[str] = None
-        if "aws_ecs_cluster_name" in compute.params:
-            assert isinstance(compute.params["aws_ecs_cluster_name"], str)
-            cluster_name = compute.params["aws_ecs_cluster_name"]
 
         assert isinstance(compute.params["aws_ami"], str)
         aws_ami: str = compute.params["aws_ami"]
@@ -198,56 +195,122 @@ class TerraformGenerator:
         assert isinstance(compute.params["aws_instance_type"], str)
         aws_ec2_instance_type: str = compute.params["aws_instance_type"]
 
-        assert isinstance(compute.params["image_url"], str)
-        image_url: str = compute.params["image_url"]
-
-        assert isinstance(compute.params["container_name"], str)
-        container_name: str = compute.params["container_name"]
-
-        cpu_cores: Optional[int] = None
-        if "cpu_cores" in compute.params:
-            assert str(compute.params["cpu_cores"]).isnumeric()
-            cpu_cores = int(str(compute.params["cpu_cores"]))
-
-        memory: Optional[int] = None
-        if "memory" in compute.params:
-            assert str(compute.params["memory"]).isnumeric()
-            memory = int(str(compute.params["memory"]))
-
-        desired_count: Optional[int] = None
-        if "desired_count" in compute.params:
-            assert str(compute.params["desired_count"]).isnumeric()
-            desired_count = int(str(compute.params["desired_count"]))
-
-        assert isinstance(compute.params["healthcheck_path"], str)
-        healthcheck_path: str = compute.params["healthcheck_path"]
-
-        assert str(compute.params["autoscale_min"]).isnumeric()
-        autoscale_min = int(str(compute.params["autoscale_min"]))
-
-        assert str(compute.params["autoscale_max"]).isnumeric()
-        autoscale_max = int(str(compute.params["autoscale_max"]))
-
-        assert str(compute.params["autoscale_target"]).isnumeric()
-        autoscale_target = int(str(compute.params["autoscale_target"]))
-
-        ssh_pubkey: Optional[str] = None
-        if "ssh_pubkey" in compute.params:
-            assert isinstance(compute.params["ssh_pubkey"], str)
-            ssh_pubkey = compute.params["ssh_pubkey"]
+        instance_count: Optional[int] = None
+        if "instance_count" in compute.params:
+            assert str(compute.params["instance_count"]).isnumeric()
+            instance_count = int(str(compute.params["instance_count"]))
 
         if "is_public" in compute.params:
             assert str(compute.params["is_public"]).isnumeric()
             needs_internet_access = bool(str(compute.params["is_public"]))
 
-        assert isinstance(compute.params["volume_path"], str)
-        volume_path: str = compute.params["volume_path"]
+        user_data: Optional[str] = None
+        if "user_data" in compute.params:
+            assert isinstance(compute.params["user_data"], str)
+            user_data = compute.params["user_data"]
 
-        assert isinstance(compute.params["volume_name"], str)
-        volume_name: str = compute.params["volume_name"]
+        ec2 = EC2(
+            compute.uid,
+            vpc=vpc,
+            aws_ami=aws_ami,
+            aws_ec2_instance_type=aws_ec2_instance_type,
+            instance_count=instance_count,
+            user_data=user_data,
+            needs_internet_access=needs_internet_access,
+            linked_storage=linked_storage,
+        )
+        self.add_low_level_item(ec2)
+
+    def high_to_low_mapping_docker(self, docker: HighLevelResource):
+        needs_internet_access = False
+        # for _ in (x for x in compute.bindings if x.target.category == ResourceCategory.INTERNET):
+        #     needs_internet_access = True
+        vpc: Optional[VPC] = None
+        for item in (x for x in docker.bindings if x.target.category == ResourceCategory.DOCKER):
+            if item.target.uid in self.ll_map:
+                linked_compute = self.ll_map[item.target.uid]
+                assert isinstance(linked_compute, LowLevelComputeItem)
+                vpc = linked_compute.vpc
+                break
+        if not vpc:
+            num_of_azs: Optional[int] = None
+            if "num_of_azs" in docker.params:
+                assert str(docker.params["num_of_azs"]).isnumeric()
+                num_of_azs = int(str(docker.params["num_of_azs"]))
+            vpc = VPC(generate_id(), num_of_azs=num_of_azs)
+            self.add_low_level_item(vpc)
+        linked_storage: Set[LowLevelStorageItem] = set()
+        for item in (x for x in docker.bindings if x.target == ResourceCategory.STORAGE):
+            if storage := self.ll_map.get(item.target.uid):
+                assert isinstance(storage, LowLevelStorageItem)
+                linked_storage.add(storage)
+            else:
+                assert item.target == ResourceCategory.STORAGE
+                self.high_to_low_mapping_storage(item.target)
+                storage = self.ll_map[item.target.uid]
+                assert isinstance(storage, LowLevelStorageItem)
+                linked_storage.add(storage)
+        cluster_name: Optional[str] = None
+        if "aws_ecs_cluster_name" in docker.params:
+            assert isinstance(docker.params["aws_ecs_cluster_name"], str)
+            cluster_name = docker.params["aws_ecs_cluster_name"]
+
+        assert isinstance(docker.params["aws_ami"], str)
+        aws_ami: str = docker.params["aws_ami"]
+
+        assert isinstance(docker.params["aws_instance_type"], str)
+        aws_ec2_instance_type: str = docker.params["aws_instance_type"]
+
+        assert isinstance(docker.params["image_url"], str)
+        image_url: str = docker.params["image_url"]
+
+        assert isinstance(docker.params["container_name"], str)
+        container_name: str = docker.params["container_name"]
+
+        cpu_cores: Optional[int] = None
+        if "cpu_cores" in docker.params:
+            assert str(docker.params["cpu_cores"]).isnumeric()
+            cpu_cores = int(str(docker.params["cpu_cores"]))
+
+        memory: Optional[int] = None
+        if "memory" in docker.params:
+            assert str(docker.params["memory"]).isnumeric()
+            memory = int(str(docker.params["memory"]))
+
+        desired_count: Optional[int] = None
+        if "desired_count" in docker.params:
+            assert str(docker.params["desired_count"]).isnumeric()
+            desired_count = int(str(docker.params["desired_count"]))
+
+        assert isinstance(docker.params["healthcheck_path"], str)
+        healthcheck_path: str = docker.params["healthcheck_path"]
+
+        assert str(docker.params["autoscale_min"]).isnumeric()
+        autoscale_min = int(str(docker.params["autoscale_min"]))
+
+        assert str(docker.params["autoscale_max"]).isnumeric()
+        autoscale_max = int(str(docker.params["autoscale_max"]))
+
+        assert str(docker.params["autoscale_target"]).isnumeric()
+        autoscale_target = int(str(docker.params["autoscale_target"]))
+
+        ssh_pubkey: Optional[str] = None
+        if "ssh_pubkey" in docker.params:
+            assert isinstance(docker.params["ssh_pubkey"], str)
+            ssh_pubkey = docker.params["ssh_pubkey"]
+
+        if "is_public" in docker.params:
+            assert str(docker.params["is_public"]).isnumeric()
+            needs_internet_access = bool(str(docker.params["is_public"]))
+
+        assert isinstance(docker.params["volume_path"], str)
+        volume_path: str = docker.params["volume_path"]
+
+        assert isinstance(docker.params["volume_name"], str)
+        volume_name: str = docker.params["volume_name"]
 
         ec2 = EC2Docker(
-            compute.uid,
+            docker.uid,
             vpc,
             healthcheck_path=healthcheck_path,
             aws_ami=aws_ami,

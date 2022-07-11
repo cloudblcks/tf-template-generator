@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from enum import auto
 from typing import Dict, Optional, Set, Union
 
-from models.utils import JsonSerialisable
 from strenum import LowercaseStrEnum
+
+from models.utils import JsonSerialisable
 from template_loader import S3TemplateLoader
 
 
@@ -30,6 +31,7 @@ class ServiceProvider(LowercaseStrEnum):
 
 
 class ResourceCategory(LowercaseStrEnum):
+    DOCKER = auto()
     COMPUTE = auto()
     SERVERLESS = auto()
     DATABASE = auto()
@@ -41,6 +43,7 @@ class ResourceCategory(LowercaseStrEnum):
     @staticmethod
     def all() -> Set["ResourceCategory"]:
         return {
+            ResourceCategory.DOCKER,
             ResourceCategory.COMPUTE,
             ResourceCategory.STORAGE,
             ResourceCategory.DATABASE,

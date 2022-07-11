@@ -98,6 +98,60 @@ class LowLevelDBItem(LowLevelAWSItem):
         raise NotImplementedError()
 
 
+class EC2(LowLevelComputeItem):
+    def __init__(
+        self,
+        new_id,
+        vpc: VPC,
+        aws_ami: str,
+        aws_ec2_instance_type: str,
+        instance_count: Optional[int] = None,
+        user_data: Optional[str] = None,
+        needs_internet_access=False,
+        linked_storage: Set[LowLevelStorageItem] = None,
+        depends_on: Set["LowLevelAWSItem"] = None,
+    ):
+        if depends_on is None:
+            depends_on = set()
+        if not linked_storage:
+            linked_storage = set()
+        depends_on.update(linked_storage)
+        depends_on.add(vpc)
+        super().__init__(new_id, vpc, depends_on)
+        self.aws_ami = aws_ami
+        self.aws_ec2_instance_type = aws_ec2_instance_type
+        if not instance_count:
+            instance_count = 1
+        self.instance_count = instance_count
+        self.needs_internet_access = needs_internet_access
+        self.template = load_template("templates/ec2/main.tf.template")
+        self.linked_storage = linked_storage
+        if not user_data:
+            user_data = ""
+        self.user_data = user_data
+
+    def generate_config(self) -> TerraformConfig:
+        out_template = ""
+        if self.template:
+            out_template = self.template.render(
+                {
+                    "uid": self.uid,
+                    "vpc_uid": self.vpc.uid,
+                    "s3_buckets": self.linked_storage,
+                    "aws_ami": self.aws_ami,
+                    "aws_instance_type": self.aws_ec2_instance_type,
+                    "instance_count": self.instance_count,
+                    "user_data": self.user_data,
+                    "subnet_id": f"public-subnet-1-{ self.vpc.uid }"
+                    if self.needs_internet_access
+                    else f"private-subnet-1-{ self.vpc.uid }"
+                    # "vpc_security_groups": self.vpc.
+                }
+            )
+
+        return TerraformConfig(out_template, "", "")
+
+
 class EC2Docker(LowLevelComputeItem):
     # TODO: add branches for public vs non public access
     def __init__(
