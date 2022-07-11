@@ -19,7 +19,7 @@
     ]
   },
   {
-    "key": "VM",
+    "key": "vm",
     "category": "compute",
     "clouds": [
       "aws"

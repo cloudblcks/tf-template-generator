@@ -134,6 +134,8 @@ class TerraformGenerator:
             if item.uid not in self.ll_map:
                 if item.category == ResourceCategory.DOCKER:
                     self.high_to_low_mapping_docker(item)
+                elif item.category == ResourceCategory.COMPUTE:
+                    self.high_to_low_mapping_compute(item)
                 elif item == ResourceCategory.DATABASE:
                     self.high_to_low_mapping_db(item)
                 elif item.category == ResourceCategory.STORAGE:
@@ -201,8 +203,8 @@ class TerraformGenerator:
             instance_count = int(str(compute.params["instance_count"]))
 
         if "is_public" in compute.params:
-            assert str(compute.params["is_public"]).isnumeric()
-            needs_internet_access = bool(str(compute.params["is_public"]))
+            assert compute.params["is_public"] in ["true", "false"]
+            needs_internet_access = bool(compute.params["is_public"])
 
         user_data: Optional[str] = None
         if "user_data" in compute.params:
@@ -300,8 +302,8 @@ class TerraformGenerator:
             ssh_pubkey = docker.params["ssh_pubkey"]
 
         if "is_public" in docker.params:
-            assert str(docker.params["is_public"]).isnumeric()
-            needs_internet_access = bool(str(docker.params["is_public"]))
+            assert docker.params["is_public"] in ["true", "false"]
+            needs_internet_access = bool(docker.params["is_public"])
 
         assert isinstance(docker.params["volume_path"], str)
         volume_path: str = docker.params["volume_path"]
