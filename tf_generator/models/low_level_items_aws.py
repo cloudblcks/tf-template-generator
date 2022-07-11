@@ -142,9 +142,7 @@ class EC2(LowLevelComputeItem):
                     "aws_instance_type": self.aws_ec2_instance_type,
                     "instance_count": self.instance_count,
                     "user_data": self.user_data,
-                    "subnet_id": f"public-subnet-1-{ self.vpc.uid }"
-                    if self.needs_internet_access
-                    else f"private-subnet-1-{ self.vpc.uid }"
+                    "subnet_id": f"{'public' if self.needs_internet_access else 'private'}-subnet-1-{ self.vpc.uid }"
                     # "vpc_security_groups": self.vpc.
                 }
             )

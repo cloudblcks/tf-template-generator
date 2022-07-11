@@ -10,7 +10,21 @@
         aws_ami: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         is_public: true
         num_of_azs: 1
-
+        user_data: |
+          \#!/bin/bash
+          sudo yum update
+          sudo yum install -y docker
+          sudo usermod -a -G docker ec2-user
+          sudo service docker start
+          sudo chkconfig docker on
+          useradd dockeradmin
+          passwd dockeradmin
+          usermod -aG docker dockeradmin
+          sudo yum install -y git
+          git clone https://github.com/airbytehq/airbyte.git
+          cd airbyte
+          docker compose up
+    
     s3-frontend:
       resource: s3
       bindings:

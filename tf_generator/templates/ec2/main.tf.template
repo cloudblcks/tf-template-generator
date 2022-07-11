@@ -12,3 +12,4 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
 EOF
   subnet_id              = {{ subnet_id }}
 }
+
