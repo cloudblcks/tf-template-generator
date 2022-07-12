@@ -178,11 +178,11 @@ class TerraformGenerator:
                     vpc.has_public_subnet = True
                 break
         if not vpc:
-            num_of_azs: Optional[int] = None
-            if "num_of_azs" in compute.params:
-                assert str(compute.params["num_of_azs"]).isnumeric()
-                num_of_azs = int(str(compute.params["num_of_azs"]))
-            vpc = VPC(generate_id(), num_of_azs=num_of_azs, is_public=needs_internet_access)
+            az_count: Optional[int] = None
+            if "az_count" in compute.params:
+                assert str(compute.params["az_count"]).isnumeric()
+                az_count = int(str(compute.params["az_count"]))
+            vpc = VPC(generate_id(), az_count=az_count, is_public=needs_internet_access)
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
@@ -236,11 +236,11 @@ class TerraformGenerator:
                 vpc = linked_compute.vpc
                 break
         if not vpc:
-            num_of_azs: Optional[int] = None
-            if "num_of_azs" in docker.params:
-                assert str(docker.params["num_of_azs"]).isnumeric()
-                num_of_azs = int(str(docker.params["num_of_azs"]))
-            vpc = VPC(generate_id(), num_of_azs=num_of_azs)
+            az_count: Optional[int] = None
+            if "az_count" in docker.params:
+                assert str(docker.params["az_count"]).isnumeric()
+                az_count = int(str(docker.params["az_count"]))
+            vpc = VPC(generate_id(), az_count=az_count)
             self.add_low_level_item(vpc)
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in docker.bindings if x.target == ResourceCategory.STORAGE):

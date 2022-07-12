@@ -53,15 +53,15 @@ class VPC(LowLevelSharedItem):
     def __init__(
         self,
         new_id: str,
-        num_of_azs: Optional[int],
+        az_count: Optional[int],
         is_public: bool = False,
         depends_on: Set["LowLevelAWSItem"] = None,
     ):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/vpc/main.tf.template")
-        if not num_of_azs:
-            num_of_azs = 2
-        self.azs: List[str] = ["a", "b", "c"][:num_of_azs]
+        if not az_count:
+            az_count = 2
+        self.azs: List[str] = ["a", "b", "c"][:az_count]
         self.subnet_cidrs: List[str] = []
         if is_public:
             self.has_public_subnet = True
@@ -69,7 +69,7 @@ class VPC(LowLevelSharedItem):
         else:
             self.has_public_subnet = False
             self.has_private_subnet = True
-        for i in range(num_of_azs):
+        for i in range(az_count):
             self.subnet_cidrs.append(f"10.0.{ i + 1 }.0/24")
 
     def generate_config(self) -> TerraformConfig:

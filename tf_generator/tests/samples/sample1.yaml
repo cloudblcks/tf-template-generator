@@ -9,7 +9,7 @@
         aws_instance_type: t2.micro
         aws_ami: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         is_public: true
-        num_of_azs: 1
+        az_count: 1
         user_data: |
           \#!/bin/bash
           sudo yum update
