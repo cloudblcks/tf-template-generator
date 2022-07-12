@@ -2,13 +2,14 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
   ami                    = {{ aws_ami }}
   instance_type          = {{ aws_instance_type }}
   count                  = {{ instance_count }}
-  vpc_security_group_ids = [
-    {% for vpc_security_group in vpc_security_groups %}
-    {{ vpc_security_group }},
-    {%endfor%}
-  ]
+#  vpc_security_group_ids = [
+#    {% for vpc_security_group in vpc_security_groups %}
+#    {{ vpc_security_group }},
+#    {%endfor%}
+#  ]
   user_data              = <<EOF
   {{ user_data }}
 EOF
   subnet_id              = {{ subnet_id }}
 }
+

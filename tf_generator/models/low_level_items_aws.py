@@ -7,11 +7,22 @@ import petname
 from jinja2 import Template
 
 from models.s3_templates import ServiceTemplate
-from template_loader import S3TemplateLoader
+
+
+def load_template(path: str) -> Template:
+    with open(path, "r") as f:
+        data = f.read()
+        return Template(data)
+
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 
-template_loader = S3TemplateLoader()
+
+class TemplateLoader:
+    EC2 = "templates/ec2/main.tf.template"
+    VPC = "templates/vpc/main.tf.template"
+    DOCKER = "templates/ecs/main.tf.template"
+    S3 = "templates/s3/main.tf.template"
 
 
 class CloudblocksValidationException(Exception):
@@ -50,27 +61,45 @@ class LowLevelSharedItem(LowLevelAWSItem):
 
 
 class VPC(LowLevelSharedItem):
-    def __init__(self, new_id: str, num_of_azs: Optional[int], depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(
+        self,
+        new_id: str,
+        az_count: Optional[int],
+        is_public: bool = False,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
         super().__init__(new_id, depends_on)
-        self.template = load_template("templates/vpc/main.tf.template")
-        if not num_of_azs:
-            num_of_azs = 2
-        self.azs: List[str] = ["a", "b", "c"][:num_of_azs]
+        self.template = load_template(TemplateLoader.VPC)
+        if not az_count:
+            az_count = 2
+        self.azs: List[str] = ["a", "b", "c"][:az_count]
         self.subnet_cidrs: List[str] = []
-        for i in range(num_of_azs):
+        if is_public:
+            self.has_public_subnet = True
+            self.has_private_subnet = False
+        else:
+            self.has_public_subnet = False
+            self.has_private_subnet = True
+        for i in range(az_count):
             self.subnet_cidrs.append(f"10.0.{ i + 1 }.0/24")
 
     def generate_config(self) -> TerraformConfig:
         out_template = ""
         if self.template:
             out_template = self.template.render(
-                {"vpc_uid": self.uid, "azs": self.azs, "subnet_cidrs": self.subnet_cidrs}
+                {
+                    "vpc_uid": self.uid,
+                    "azs": self.azs,
+                    "subnet_cidrs": self.subnet_cidrs,
+                    "has_public_subnet": self.has_public_subnet,
+                    "has_private_subnet": self.has_private_subnet,
+                }
             )
         return TerraformConfig(out_template, "", "")
 
 
 class LowLevelComputeItem(LowLevelAWSItem):
-    def __init__(self, new_id: str, vpc: VPC, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, vpc: VPC, depends_on: Set[LowLevelAWSItem] = None):
         if depends_on is None:
             depends_on = set()
         depends_on.add(vpc)
@@ -82,7 +111,7 @@ class LowLevelComputeItem(LowLevelAWSItem):
 
 
 class LowLevelStorageItem(LowLevelAWSItem):
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
 
     def generate_config(self):
@@ -96,6 +125,65 @@ class LowLevelDBItem(LowLevelAWSItem):
 
     def generate_config(self):
         raise NotImplementedError()
+
+
+class EC2(LowLevelComputeItem):
+    def __init__(
+        self,
+        new_id,
+        vpc: VPC,
+        aws_ami: str,
+        aws_ec2_instance_type: str,
+        instance_count: Optional[int] = None,
+        user_data: Optional[str] = None,
+        needs_internet_access=False,
+        linked_storage: Set[LowLevelStorageItem] = None,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
+        if depends_on is None:
+            depends_on = set()
+
+        if not linked_storage:
+            linked_storage = set()
+
+        depends_on.update(linked_storage)
+        depends_on.add(vpc)
+
+        super().__init__(new_id, vpc, depends_on)
+
+        self.aws_ami = aws_ami
+        self.aws_ec2_instance_type = aws_ec2_instance_type
+
+        if not instance_count:
+            instance_count = 1
+        self.instance_count = instance_count
+
+        self.needs_internet_access = needs_internet_access
+        self.template = load_template(TemplateLoader.EC2)
+        self.linked_storage = linked_storage
+
+        if not user_data:
+            user_data = ""
+        self.user_data = user_data
+
+    def generate_config(self) -> TerraformConfig:
+        out_template = ""
+        if self.template:
+            out_template = self.template.render(
+                {
+                    "uid": self.uid,
+                    "vpc_uid": self.vpc.uid,
+                    "s3_buckets": self.linked_storage,
+                    "aws_ami": self.aws_ami,
+                    "aws_instance_type": self.aws_ec2_instance_type,
+                    "instance_count": self.instance_count,
+                    "user_data": self.user_data,
+                    "subnet_id": f"{'public' if self.needs_internet_access else 'private'}-subnet-1-{ self.vpc.uid }"
+                    # "vpc_security_groups": self.vpc.
+                }
+            )
+
+        return TerraformConfig(out_template, "", "")
 
 
 class EC2Docker(LowLevelComputeItem):
@@ -121,7 +209,7 @@ class EC2Docker(LowLevelComputeItem):
         ssh_pubkey: Optional[str] = None,
         needs_internet_access=False,
         linked_storage: Set[LowLevelStorageItem] = None,
-        depends_on: Set["LowLevelAWSItem"] = None,
+        depends_on: Set[LowLevelAWSItem] = None,
     ):
         if aws_ecs_cluster_name is None:
             aws_ecs_cluster_name = f"ecs-{new_id}-{petname.Generate(3)}"
@@ -136,7 +224,7 @@ class EC2Docker(LowLevelComputeItem):
         depends_on.add(vpc)
         super().__init__(new_id, vpc, depends_on)
         self.linked_storage = linked_storage
-        self.template = load_template("templates/ecs/main.tf.template")
+        self.template = load_template(TemplateLoader.DOCKER)
         self.aws_ami = aws_ami
         self.aws_ec2_instance_type = aws_ec2_instance_type
         self.task_definition_family_name = f"taskdef-{new_id}-{petname.Generate(3)}"
@@ -194,9 +282,9 @@ class RDS(LowLevelDBItem):
 
 
 class S3(LowLevelStorageItem):
-    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
-        self.template = load_template("templates/s3/main.tf.template")
+        self.template = load_template(TemplateLoader.S3)
         if not bucket_name:
             bucket_name = f"s3-{new_id}-{petname.Generate(3)}"
         self.bucket_name = bucket_name
@@ -208,7 +296,7 @@ class S3(LowLevelStorageItem):
 
 class S3PublicWebsite(LowLevelStorageItem):
     # TODO: add templates for S3 website
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
 
     def generate_config(self) -> TerraformConfig:
@@ -250,14 +338,20 @@ class TerraformGeneratorAWS:
         for item in self.ll_list:
             if len(item.depends_on) > 0:
                 for dep in item.depends_on:
-                    out_outputs, out_template, out_variables = compile_item(
+                    add_outputs, add_template, add_variables = compile_item(
                         compiled, dep, out_outputs, out_template, out_variables
                     )
+                    out_template += add_template
+                    out_outputs += add_outputs
+                    out_variables += add_variables
             # checking one more time in case it was already generated via dependencies
             if not compiled[item.uid]:
-                out_outputs, out_template, out_variables = compile_item(
+                add_outputs, add_template, add_variables = compile_item(
                     compiled, item, out_outputs, out_template, out_variables
                 )
+                out_template += add_template
+                out_outputs += add_outputs
+                out_variables += add_variables
 
         out = ServiceTemplate(
             service_name="All services",
@@ -273,9 +367,3 @@ class TerraformGeneratorAWS:
 
 def generate_id() -> str:
     return uuid.uuid4().hex
-
-
-def load_template(path: str) -> Template:
-    with open(path, "r") as f:
-        data = f.read()
-        return Template(data)

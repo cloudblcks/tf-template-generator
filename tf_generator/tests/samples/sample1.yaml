@@ -1,33 +1,34 @@
 - cloud: aws
   resources:
-    docker-server-prod:
-      resource: docker
+    server:
+      resource: vm
       bindings:
         - direction: to
           id: s3-frontend
       params:
-        aws_ecs_cluster_name = clustername1
-        aws_instance_type = t2.micro
-        aws_ami = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
-        image_url = https://hub.docker.com/r/clickhouse/clickhouse-server/
-        container_name = clickhouse-server
-        cpu_cores = 10
-        memory = 2048
-        desired_count = 1
-        healthcheck_path = some-path
-        autoscale_min = 1
-        autoscale_max = 10
-        autoscale_target = 3
-        ssh_pubkey = ~/.ssh/id_rsa.pub
-        is_public = true
-        num_of_azs = 2
-        volume_name = root
-        volume_path = /var/lib/clickhouse/
-
+        aws_instance_type: t2.micro
+        aws_ami: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        is_public: true
+        az_count: 1
+        user_data: |
+          \#!/bin/bash
+          sudo yum update
+          sudo yum install -y docker
+          sudo usermod -a -G docker ec2-user
+          sudo service docker start
+          sudo chkconfig docker on
+          useradd dockeradmin
+          passwd dockeradmin
+          usermod -aG docker dockeradmin
+          sudo yum install -y git
+          git clone https://github.com/airbytehq/airbyte.git
+          cd airbyte
+          docker compose up
+    
     s3-frontend:
       resource: s3
       bindings:
         - direction: from
-          id: docker-server-prod
+          id: server
       params:
         bucket_name: sample_frontend_01
