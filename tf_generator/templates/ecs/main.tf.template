@@ -275,3 +275,4 @@ resource "aws_autoscaling_group" "autoscaling_group-{{ uid }}" {
   launch_configuration = aws_launch_configuration.ecs-{{ uid }}_launch_configuration.name
   vpc_zone_identifier  = [aws_subnet.private-subnet-1-{{ vpc_uid }}.id, aws_subnet.private-subnet-2-{{ vpc_uid }}.id]
 }
+
