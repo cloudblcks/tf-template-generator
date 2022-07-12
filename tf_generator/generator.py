@@ -175,6 +175,8 @@ class TerraformGenerator:
                 vpc = linked_compute.vpc
                 if needs_internet_access:
                     vpc.has_public_subnet = True
+                else:
+                    vpc.has_private_subnet = True
                 break
         if not vpc:
             az_count: Optional[int] = None
