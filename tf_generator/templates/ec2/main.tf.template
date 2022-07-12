@@ -1,3 +1,52 @@
+{% if s3_buckets|length > 0  %}
+resource "aws_iam_policy" "ec2_instance_{{ uid }}_policy" {
+  policy = <<EOT
+{
+    "Version": "2008-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": ["s3:ListBucket", "s3:*Object"],
+        "Resource": [
+        {% for bucket in s3_buckets %}
+        "${aws_s3_bucket.bucket-{{ bucket.uid }}.arn}",
+        {% endfor %}
+        ]
+      }
+    ]
+  })
+}
+EOT
+}
+
+resource "aws_iam_role" "ec2_instance_{{ uid }}_role" {
+  assume_role_policy = <<EOT
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "ec2. amazonaws.com"
+        }
+      }
+    ]
+  }
+  EOT
+}
+
+resource "aws_iam_policy_attachment" "ec2_instance_{{ uid }}_policy_attachment" {
+  roles      = [aws_iam_role.ec2_instance_{{ uid }}_role]
+  policy_arn = aws_iam_policy.ec2_instance_{{ uid }}_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ec2_instance_{{ uid }}_instance_profile" {
+  role = aws_iam_role.ec2_instance_{{ uid }}_role.name
+}
+
+{% endif %}
+
 resource "aws_instance" "ec2_instance_{{ uid }}" {
   ami                    = {{ aws_ami }}
   instance_type          = {{ aws_instance_type }}
@@ -11,5 +60,12 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
   {{ user_data }}
 EOF
   subnet_id              = {{ subnet_id }}
+  {% if s3_buckets|length > 0  %}
+  iam_instance_profile   = aws_iam_instance_profile.ec2_instance_{{ uid }}_instance_profile.name
+  {% endif %}
 }
+
+
+
+
 

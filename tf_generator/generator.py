@@ -187,12 +187,12 @@ class TerraformGenerator:
             self.add_low_level_item(vpc)
 
         linked_storage: Set[LowLevelStorageItem] = set()
-        for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
+        for item in (x for x in compute.bindings if x.target.category == ResourceCategory.STORAGE):
             if storage := self.ll_map.get(item.target.uid):
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
             else:
-                assert item.target == ResourceCategory.STORAGE
+                assert item.target.category == ResourceCategory.STORAGE
                 self.high_to_low_mapping_storage(item.target)
                 storage = self.ll_map[item.target.uid]
                 assert isinstance(storage, LowLevelStorageItem)
@@ -246,12 +246,12 @@ class TerraformGenerator:
 
         linked_storage: Set[LowLevelStorageItem] = set()
 
-        for item in (x for x in docker.bindings if x.target == ResourceCategory.STORAGE):
+        for item in (x for x in docker.bindings if x.target.category == ResourceCategory.STORAGE):
             if storage := self.ll_map.get(item.target.uid):
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
             else:
-                assert item.target == ResourceCategory.STORAGE
+                assert item.target.category == ResourceCategory.STORAGE
                 self.high_to_low_mapping_storage(item.target)
                 storage = self.ll_map[item.target.uid]
                 assert isinstance(storage, LowLevelStorageItem)
