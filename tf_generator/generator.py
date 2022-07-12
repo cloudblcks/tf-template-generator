@@ -224,8 +224,6 @@ class TerraformGenerator:
 
     def high_to_low_mapping_docker(self, docker: HighLevelResource):
         needs_internet_access = False
-        # for _ in (x for x in compute.bindings if x.target.category == ResourceCategory.INTERNET):
-        #     needs_internet_access = True
         vpc: Optional[VPC] = None
         for item in (x for x in docker.bindings if x.target.category == ResourceCategory.DOCKER):
             if item.target.uid in self.ll_map:
