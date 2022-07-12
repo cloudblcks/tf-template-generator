@@ -7,7 +7,6 @@ import petname
 from jinja2 import Template
 
 from models.s3_templates import ServiceTemplate
-from template_loader import S3TemplateLoader
 
 
 def load_template(path: str) -> Template:
@@ -17,12 +16,13 @@ def load_template(path: str) -> Template:
 
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
-EC2_TEMPLATE = load_template("templates/ec2/main.tf.template")
-VPC_TEMPLATE = load_template("templates/vpc/main.tf.template")
-EC2_DOCKER_TEMPLATE = load_template("templates/ecs/main.tf.template")
-S3_TEMPLATE = load_template("templates/s3/main.tf.template")
 
-template_loader = S3TemplateLoader()
+
+class TemplateLoader:
+    EC2 = "templates/ec2/main.tf.template"
+    VPC = "templates/vpc/main.tf.template"
+    DOCKER = "templates/ecs/main.tf.template"
+    S3 = "templates/s3/main.tf.template"
 
 
 class CloudblocksValidationException(Exception):
@@ -69,7 +69,7 @@ class VPC(LowLevelSharedItem):
         depends_on: Set[LowLevelAWSItem] = None,
     ):
         super().__init__(new_id, depends_on)
-        self.template = VPC_TEMPLATE
+        self.template = load_template(TemplateLoader.VPC)
         if not az_count:
             az_count = 2
         self.azs: List[str] = ["a", "b", "c"][:az_count]
@@ -159,7 +159,7 @@ class EC2(LowLevelComputeItem):
         self.instance_count = instance_count
 
         self.needs_internet_access = needs_internet_access
-        self.template = EC2_TEMPLATE
+        self.template = load_template(TemplateLoader.EC2)
         self.linked_storage = linked_storage
 
         if not user_data:
@@ -224,7 +224,7 @@ class EC2Docker(LowLevelComputeItem):
         depends_on.add(vpc)
         super().__init__(new_id, vpc, depends_on)
         self.linked_storage = linked_storage
-        self.template = EC2_DOCKER_TEMPLATE
+        self.template = load_template(TemplateLoader.DOCKER)
         self.aws_ami = aws_ami
         self.aws_ec2_instance_type = aws_ec2_instance_type
         self.task_definition_family_name = f"taskdef-{new_id}-{petname.Generate(3)}"
@@ -284,7 +284,7 @@ class RDS(LowLevelDBItem):
 class S3(LowLevelStorageItem):
     def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
-        self.template = S3_TEMPLATE
+        self.template = load_template(TemplateLoader.S3)
         if not bucket_name:
             bucket_name = f"s3-{new_id}-{petname.Generate(3)}"
         self.bucket_name = bucket_name
