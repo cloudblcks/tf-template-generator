@@ -39,13 +39,13 @@ jobs:
     # Build the sample terraform files
     - name: Build Terraform configurations using Cloudblocks
       run: |
-        cd tests/
+        cd tf_generator/tests/
         chmod +x build_sample_terraforms.sh
         ./build_sample_terraforms.sh
     
-    # Navigate to the folder with samples
-    - name: Navigate to folder with samples
-      run: cd ../../temp
+#     # Navigate to the folder with samples
+#     - name: Navigate to folder with samples
+#       run: cd ../../temp
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
