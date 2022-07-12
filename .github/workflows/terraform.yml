@@ -30,10 +30,16 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v4
       
+    - name: Install dependencies
+      run: |
+        cd tf_generator/
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
     # Build the sample terraform files
     - name: Build Terraform configurations using Cloudblocks
       run: |
-        cd tf_generator/tests/
+        cd tests/
         chmod +x build_sample_terraforms.sh
         ./build_sample_terraforms.sh
     
