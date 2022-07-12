@@ -11,7 +11,7 @@ import template_writer
 from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
-from models.s3_templates import ServiceProvider
+from models.data_model import ServiceProvider
 from models.tf_type_mapping import ResourceDetails
 
 load_dotenv()
@@ -168,9 +168,7 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
 
 
 def _build(data):
-    with open(TEMPLATES_MAP_PATH, "r") as f:
-        template_map = json.load(f)
-        generator = TerraformGenerator(template_map)
+    generator = TerraformGenerator()
     templates = generator.generate_template_from_json(data)
     return templates
 

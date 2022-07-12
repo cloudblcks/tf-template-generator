@@ -21,23 +21,17 @@ from models.low_level_items_aws import (
     LowLevelComputeItem,
     EC2,
 )
-from models.s3_templates import (
-    ProviderTemplate,
-    ServiceCategories,
-    ServiceTemplate,
-)
 from models.tf_type_mapping import ResourceCategory
-from template_loader import S3TemplateLoader
+from template_loader import load_template
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
+PROVIDER_TEMPLATE_PATH_AWS = "templates/providers/aws.tf.template"
 
 
 class TerraformGenerator:
-    def __init__(self, templates_map: Dict, base_template: str = None):
+    def __init__(self, base_template: str = None):
         self.ll_map: Dict[str, LowLevelAWSItem] = {}
         self.ll_list: List[LowLevelAWSItem] = []
-        self.loader = S3TemplateLoader()
-        self.templates = ServiceCategories.from_dict(templates_map)
         if base_template:
             self.base = Template(base_template)
         else:
@@ -47,70 +41,11 @@ class TerraformGenerator:
         with open(BASE_TEMPLATE_PATH, "r") as f:
             self.base = Template(f.read())
 
-    def get_provider_template(self, provider: str) -> Optional[str]:
-        provider_template: ProviderTemplate = self.templates.providers.get(provider)
-        if not provider_template:
+    def get_provider_template(self, provider: str) -> str:
+        if provider == "aws":
+            return str(load_template(PROVIDER_TEMPLATE_PATH_AWS).generate())
+        else:
             raise KeyError(f"No provider named [{provider}] found")
-
-        provider_template.load(self.loader)
-        return provider_template.template
-
-    def get_service_templates(
-        self,
-        provider: str,
-        compute_service: Optional[str],
-        serverless_service: Optional[str],
-        storage_service: Optional[str],
-        database_service: Optional[str],
-        website_host_service: Optional[str],
-    ) -> Dict[str, ServiceTemplate]:
-        templates = {}
-
-        if compute_service:
-            templates[ResourceCategory.DOCKER] = self.templates.get(ResourceCategory.DOCKER, provider, compute_service)
-        if serverless_service:
-            templates[ResourceCategory.SERVERLESS] = self.templates.get(
-                ResourceCategory.SERVERLESS, provider, serverless_service
-            )
-        if storage_service:
-            templates[ResourceCategory.STORAGE] = self.templates.get(
-                ResourceCategory.STORAGE, provider, storage_service
-            )
-        if database_service:
-            templates[ResourceCategory.DATABASE] = self.templates.get(
-                ResourceCategory.DATABASE, provider, database_service
-            )
-        if website_host_service:
-            templates[ResourceCategory.WEBSITE_HOST] = self.templates.get(
-                ResourceCategory.WEBSITE_HOST, provider, website_host_service
-            )
-
-        return templates  # type: ignore
-
-    def generate_template(
-        self,
-        provider: str,
-        compute_service: Optional[str],
-        serverless_service: Optional[str],
-        storage_service: Optional[str],
-        database_service: Optional[str],
-        website_host_service: Optional[str],
-    ) -> str:
-        provider_template = self.get_provider_template(provider)
-        service_templates = self.get_service_templates(
-            provider,
-            compute_service,
-            serverless_service,
-            storage_service,
-            database_service,
-            website_host_service,
-        )
-        return self.base.render(
-            {
-                "providers": provider_template,
-                "services": [value for value in service_templates.values() if value],
-            }
-        )
 
     def generate_template_from_json(self, json_data: List[Dict]) -> str:
         hl_arr = json_to_high_level_list(json_data)
