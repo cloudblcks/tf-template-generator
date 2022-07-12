@@ -53,7 +53,7 @@ jobs:
     - name: Terraform Init
       run: |
         cd temp
-        terraform init
+        terraform init -backend=false
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
