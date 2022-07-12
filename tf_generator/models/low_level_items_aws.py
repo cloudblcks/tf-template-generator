@@ -131,19 +131,26 @@ class EC2(LowLevelComputeItem):
     ):
         if depends_on is None:
             depends_on = set()
+
         if not linked_storage:
             linked_storage = set()
+
         depends_on.update(linked_storage)
         depends_on.add(vpc)
+
         super().__init__(new_id, vpc, depends_on)
+
         self.aws_ami = aws_ami
         self.aws_ec2_instance_type = aws_ec2_instance_type
+
         if not instance_count:
             instance_count = 1
         self.instance_count = instance_count
+
         self.needs_internet_access = needs_internet_access
         self.template = load_template("templates/ec2/main.tf.template")
         self.linked_storage = linked_storage
+
         if not user_data:
             user_data = ""
         self.user_data = user_data
