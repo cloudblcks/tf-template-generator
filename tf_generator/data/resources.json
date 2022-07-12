@@ -62,7 +62,7 @@
       },
       {
         "param": "az_count",
-        "description": "Number of Availability Zones to be used by the deployment, default 2",
+        "description": "Number of Availability Zones to be used, default 2",
         "data_type": "number",
         "required": false
       }
