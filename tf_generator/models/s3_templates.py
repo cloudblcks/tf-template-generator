@@ -5,9 +5,9 @@ from typing import Dict, Optional, Set, Union
 from strenum import LowercaseStrEnum
 
 from models.utils import JsonSerialisable
-from template_loader import S3TemplateLoader
 
 
+# noinspection PyArgumentList
 class ServiceProvider(LowercaseStrEnum):
     AWS = auto()
     AZURE = auto()
@@ -30,6 +30,7 @@ class ServiceProvider(LowercaseStrEnum):
         return ServiceProvider[key.upper()]
 
 
+# noinspection PyArgumentList
 class ResourceCategory(LowercaseStrEnum):
     DOCKER = auto()
     COMPUTE = auto()
