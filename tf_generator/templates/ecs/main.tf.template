@@ -114,7 +114,7 @@ resource "aws_launch_configuration" "ecs-{{ uid }}_launch_configuration" {
   iam_instance_profile        = aws_iam_instance_profile.ecs-{{ uid }}_instance_profile.name
   key_name                    = aws_key_pair.ssh_key-{{ uid }}.key_name
   associate_public_ip_address = true
-  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='${{{ aws_ecs_cluster_name }}}' > /etc/ecs/ecs.config"
+  user_data                   = "#!/bin/bash\necho ECS_CLUSTER='{{ aws_ecs_cluster_name }}' > /etc/ecs/ecs.config"
 }
 
 
