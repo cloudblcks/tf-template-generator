@@ -1,3 +1,5 @@
+[![Python (in `/tf_generator`)](https://github.com/cloudblcks/tf-template-generator/actions/workflows/python.yml/badge.svg)](https://github.com/cloudblcks/tf-template-generator/actions/workflows/python.yml)
+
 # tf-template-generator
 
 ## How to prepare Docker image for the lambda function

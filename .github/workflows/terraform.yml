@@ -1,0 +1,64 @@
+name: 'Terraform samples'
+
+on:
+  push:
+    branches:
+    - "main"
+  pull_request:
+
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    # Install the latest version of Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      
+    # Install the 3.10 version of Python
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+          python-version: "3.10"
+      
+    - name: Install dependencies
+      run: |
+        cd tf_generator/
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+    # Build the sample terraform files
+    - name: Build Terraform configurations using Cloudblocks
+      run: |
+        cd tf_generator/tests/
+        chmod +x build_sample_terraforms.sh
+        ./build_sample_terraforms.sh
+    
+#     # Navigate to the folder with samples
+#     - name: Navigate to folder with samples
+#       run: cd ../../temp
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Checks that all terraform configuration files are valid
+    - name: Terraform Validate
+      run: terraform validate
+
+
