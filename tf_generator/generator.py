@@ -43,7 +43,7 @@ class TerraformGenerator:
 
     def get_provider_template(self, provider: str) -> str:
         if provider == "aws":
-            return str(load_template(PROVIDER_TEMPLATE_PATH_AWS).generate())
+            return load_template(PROVIDER_TEMPLATE_PATH_AWS).render()
         else:
             raise KeyError(f"No provider named [{provider}] found")
 
