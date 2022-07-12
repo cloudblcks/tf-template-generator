@@ -164,6 +164,7 @@ class TerraformGenerator:
         if "is_public" in compute.params:
             assert compute.params["is_public"] in ["true", "false"]
             needs_internet_access = bool(compute.params["is_public"])
+
         vpc: Optional[VPC] = None
         for item in (
             x for x in compute.bindings if x.target.category in [ResourceCategory.COMPUTE, ResourceCategory.DOCKER]
@@ -182,6 +183,7 @@ class TerraformGenerator:
                 az_count = int(str(compute.params["az_count"]))
             vpc = VPC(generate_id(), az_count=az_count, is_public=needs_internet_access)
             self.add_low_level_item(vpc)
+
         linked_storage: Set[LowLevelStorageItem] = set()
         for item in (x for x in compute.bindings if x.target == ResourceCategory.STORAGE):
             if storage := self.ll_map.get(item.target.uid):
@@ -225,6 +227,7 @@ class TerraformGenerator:
     def high_to_low_mapping_docker(self, docker: HighLevelResource):
         needs_internet_access = False
         vpc: Optional[VPC] = None
+
         for item in (x for x in docker.bindings if x.target.category == ResourceCategory.DOCKER):
             if item.target.uid in self.ll_map:
                 linked_compute = self.ll_map[item.target.uid]
@@ -238,7 +241,9 @@ class TerraformGenerator:
                 az_count = int(str(docker.params["az_count"]))
             vpc = VPC(generate_id(), az_count=az_count)
             self.add_low_level_item(vpc)
+
         linked_storage: Set[LowLevelStorageItem] = set()
+
         for item in (x for x in docker.bindings if x.target == ResourceCategory.STORAGE):
             if storage := self.ll_map.get(item.target.uid):
                 assert isinstance(storage, LowLevelStorageItem)
@@ -249,7 +254,9 @@ class TerraformGenerator:
                 storage = self.ll_map[item.target.uid]
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
+
         cluster_name: Optional[str] = None
+
         if "aws_ecs_cluster_name" in docker.params:
             assert isinstance(docker.params["aws_ecs_cluster_name"], str)
             cluster_name = docker.params["aws_ecs_cluster_name"]
