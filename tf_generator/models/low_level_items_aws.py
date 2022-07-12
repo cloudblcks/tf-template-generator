@@ -55,7 +55,7 @@ class VPC(LowLevelSharedItem):
         new_id: str,
         az_count: Optional[int],
         is_public: bool = False,
-        depends_on: Set["LowLevelAWSItem"] = None,
+        depends_on: Set[LowLevelAWSItem] = None,
     ):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/vpc/main.tf.template")
@@ -88,7 +88,7 @@ class VPC(LowLevelSharedItem):
 
 
 class LowLevelComputeItem(LowLevelAWSItem):
-    def __init__(self, new_id: str, vpc: VPC, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, vpc: VPC, depends_on: Set[LowLevelAWSItem] = None):
         if depends_on is None:
             depends_on = set()
         depends_on.add(vpc)
@@ -100,7 +100,7 @@ class LowLevelComputeItem(LowLevelAWSItem):
 
 
 class LowLevelStorageItem(LowLevelAWSItem):
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
 
     def generate_config(self):
@@ -127,7 +127,7 @@ class EC2(LowLevelComputeItem):
         user_data: Optional[str] = None,
         needs_internet_access=False,
         linked_storage: Set[LowLevelStorageItem] = None,
-        depends_on: Set["LowLevelAWSItem"] = None,
+        depends_on: Set[LowLevelAWSItem] = None,
     ):
         if depends_on is None:
             depends_on = set()
@@ -191,7 +191,7 @@ class EC2Docker(LowLevelComputeItem):
         ssh_pubkey: Optional[str] = None,
         needs_internet_access=False,
         linked_storage: Set[LowLevelStorageItem] = None,
-        depends_on: Set["LowLevelAWSItem"] = None,
+        depends_on: Set[LowLevelAWSItem] = None,
     ):
         if aws_ecs_cluster_name is None:
             aws_ecs_cluster_name = f"ecs-{new_id}-{petname.Generate(3)}"
@@ -264,7 +264,7 @@ class RDS(LowLevelDBItem):
 
 
 class S3(LowLevelStorageItem):
-    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
         self.template = load_template("templates/s3/main.tf.template")
         if not bucket_name:
@@ -278,7 +278,7 @@ class S3(LowLevelStorageItem):
 
 class S3PublicWebsite(LowLevelStorageItem):
     # TODO: add templates for S3 website
-    def __init__(self, new_id: str, depends_on: Set["LowLevelAWSItem"] = None):
+    def __init__(self, new_id: str, depends_on: Set[LowLevelAWSItem] = None):
         super().__init__(new_id, depends_on)
 
     def generate_config(self) -> TerraformConfig:
