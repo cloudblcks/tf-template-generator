@@ -166,9 +166,7 @@ class TerraformGenerator:
             needs_internet_access = bool(compute.params["is_public"])
         vpc: Optional[VPC] = None
         for item in (
-            x
-            for x in compute.bindings
-            if (x.target.category == ResourceCategory.COMPUTE or x.target.category == ResourceCategory.DOCKER)
+            x for x in compute.bindings if x.target.category in [ResourceCategory.COMPUTE, ResourceCategory.DOCKER]
         ):
             if item.target.uid in self.ll_map:
                 linked_compute = self.ll_map[item.target.uid]
