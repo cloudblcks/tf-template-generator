@@ -7,10 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  AWS_ACCESS_KEY_ID: {{ secret.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: {{ secret.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: "us-west-1"
+# env:
+#   AWS_ACCESS_KEY_ID: {{ secret.AWS_ACCESS_KEY_ID }}
+#   AWS_SECRET_ACCESS_KEY: {{ secret.AWS_SECRET_ACCESS_KEY }}
+#   AWS_REGION: "us-west-1"
 
 jobs:
   terraform:
