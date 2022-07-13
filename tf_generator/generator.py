@@ -42,7 +42,7 @@ class TerraformGenerator:
         with open(BASE_TEMPLATE_PATH, "r") as f:
             self.base = Template(f.read())
 
-    def get_provider_template(self, provider: str) -> str:
+    def get_provider_template(self, provider: str, region: str) -> str:
         if provider == ServiceProvider.AWS:
             return load_template(PROVIDER_TEMPLATE_PATH_AWS).render({"region": region})
         else:
