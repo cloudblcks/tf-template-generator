@@ -66,6 +66,6 @@ jobs:
     - name: Terraform Validate
       run: |
         cd temp
-        terraform validate
+        terraform plan
 
 
