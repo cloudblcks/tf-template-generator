@@ -26,6 +26,7 @@ class CloudSchema(Schema):
             )
 
         if "regions" not in data:
+            # data["regions"] = [CLOUD_PROVIDER_SETTINGS.get(cloud_provider).default_region]
             return data
 
         cloud_provider_regions = CLOUD_PROVIDER_SETTINGS.get(cloud_provider).regions
