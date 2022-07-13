@@ -6,14 +6,8 @@ from typing import Optional, Dict, Set, List
 import petname
 from jinja2 import Template
 
-from models.s3_templates import ServiceTemplate
-
-
-def load_template(path: str) -> Template:
-    with open(path, "r") as f:
-        data = f.read()
-        return Template(data)
-
+from models.data_model import ServiceTemplate
+from template_loader import load_template
 
 BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
 

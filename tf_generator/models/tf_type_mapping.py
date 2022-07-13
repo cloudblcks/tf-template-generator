@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
-from models.s3_templates import ServiceProvider, ResourceCategory
+from models.data_model import ServiceProvider, ResourceCategory
 from models.utils import JsonSerialisable
 
 

@@ -3,8 +3,8 @@ from typing import Dict
 from schema import Schema, And, Use, Optional, Or, SchemaError
 
 from config import CLOUD_PROVIDER_SETTINGS
+from models.data_model import ResourceCategory
 from models.high_level_items import HIGH_LEVEL_BINDING_DIRECTIONS
-from models.s3_templates import ResourceCategory
 
 DEFAULT_PROVIDER = "aws"
 

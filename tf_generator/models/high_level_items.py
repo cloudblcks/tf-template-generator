@@ -6,8 +6,8 @@ from typing import List, Dict, Optional, Tuple
 from strenum import LowercaseStrEnum
 
 from config import RESOURCE_SETTINGS, CLOUD_PROVIDER_SETTINGS
+from models.data_model import ServiceProvider
 from models.low_level_items_aws import LowLevelAWSItem, LowLevelComputeItem, CloudblocksValidationException
-from models.s3_templates import ServiceProvider
 from models.tf_type_mapping import ResourceDetails, ResourceCategory
 from models.utils import JsonSerialisable
 
