@@ -16,7 +16,7 @@ resource "aws_route_table" "public-route-table-{{ vpc_uid }}" {
 resource "aws_subnet" "public-subnet-{{ loop.index }}-{{ vpc_uid }}" {
   cidr_block        = "{{ subnet_cidrs[loop.index0] }}"
   vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = format("%s%s", aws_region.current, az)
+  availability_zone = format("%s%s", data.aws_region.current, az)
 }
 
 resource "aws_route_table_association" "public-route-{{ loop.index }}-association-{{ vpc_uid }}" {
@@ -70,7 +70,7 @@ resource "aws_route_table" "private-route-table-{{ vpc_uid }}" {
 resource "aws_subnet" "private-subnet-{{ loop.index }}-{{ vpc_uid }}" {
   cidr_block        = "{{ subnet_cidrs[loop.index0] }}"
   vpc_id            = aws_vpc.vpc-{{ vpc_uid }}.id
-  availability_zone = format("%s%s", aws_region.current, az)
+  availability_zone = format("%s%s", data.aws_region.current, az)
 }
 
 
