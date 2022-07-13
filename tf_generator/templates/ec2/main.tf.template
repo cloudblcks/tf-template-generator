@@ -37,6 +37,7 @@ resource "aws_iam_role" "ec2_instance_{{ uid }}_role" {
 }
 
 resource "aws_iam_policy_attachment" "ec2_instance_{{ uid }}_policy_attachment" {
+  name       = "ec2_instance_{{ uid }}_policy_attachment"
   roles      = [aws_iam_role.ec2_instance_{{ uid }}_role]
   policy_arn = aws_iam_policy.ec2_instance_{{ uid }}_policy.arn
 }
