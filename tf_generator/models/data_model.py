@@ -78,7 +78,10 @@ class ProviderTemplate(JsonSerialisable):
         )
 
     def to_dict(self) -> Dict:
-        d = {"name": str(self.name), "uri": self.uri}
+        d = {
+            "name": str(self.name),
+            "uri": self.uri,
+        }
         if self.template:
             d["template"] = self.template
 
