@@ -3,6 +3,7 @@ from typing import Dict, Optional, List, Set
 
 from jinja2 import Template
 
+from models.data_model import ServiceProvider
 from models.high_level_items import (
     HighLevelResource,
     HighLevelBindingDirection,
@@ -42,7 +43,7 @@ class TerraformGenerator:
             self.base = Template(f.read())
 
     def get_provider_template(self, provider: str) -> str:
-        if provider == "aws":
+        if provider == ServiceProvider.AWS:
             return load_template(PROVIDER_TEMPLATE_PATH_AWS).render()
         else:
             raise KeyError(f"No provider named [{provider}] found")
