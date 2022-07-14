@@ -72,4 +72,10 @@ jobs:
         cd temp
         terraform plan
 
+    # Checks that all terraform configuration files are valid
+    - name: tflint
+      run: |
+        cd temp
+        tflint
+
 
