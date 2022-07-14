@@ -11,7 +11,7 @@ def handle(version: str, action: str, data: Dict) -> Tuple[Union[str, List[str]]
                 return results, 422
 
         elif action == "build":
-            results = [line for line in cli._build(data).split("\n")]
+            results = cli._build(data).split("\n")
 
         elif action == "search":
             search_results = cli._search(data.get("keyword"), data.get("cloud"), data.get("tags"))
