@@ -7,9 +7,9 @@ def handle(version: str, action: str, data: Dict) -> Tuple[Union[str, List[str]]
     if version == "1.0":
         if action == "validate":
             valid, results = cli._validate(data, verbose=True)
-
             if not valid:
                 return results, 422
+
         elif action == "build":
             results = [line for line in cli._build(data).split("\n")]
 

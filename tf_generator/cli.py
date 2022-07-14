@@ -175,7 +175,7 @@ def _build(data):
     return templates
 
 
-def _validate(data, verbose=False) -> Tuple[bool, str]:
+def _validate(data, verbose=False) -> Tuple[bool, Optional[str]]:
     is_valid, err_message = schema_validator.validate(data)
 
     if is_valid:
