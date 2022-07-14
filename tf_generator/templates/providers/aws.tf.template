@@ -1,3 +1,8 @@
+variable "aws_region" {
+  type    = string
+  default = "{{ region }}"
+}
+
 terraform {
   required_providers {
     aws = {

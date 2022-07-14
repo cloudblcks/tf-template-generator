@@ -42,17 +42,19 @@ class TerraformGenerator:
         with open(BASE_TEMPLATE_PATH, "r") as f:
             self.base = Template(f.read())
 
-    def get_provider_template(self, provider: str) -> str:
+    def get_provider_template(self, provider: str, region: str) -> str:
         if provider == ServiceProvider.AWS:
-            return load_template(PROVIDER_TEMPLATE_PATH_AWS).render()
+            return load_template(PROVIDER_TEMPLATE_PATH_AWS).render({"region": region})
         else:
             raise KeyError(f"No provider named [{provider}] found")
 
     def generate_template_from_json(self, json_data: List[Dict]) -> str:
         hl_arr = json_to_high_level_list(json_data)
+        # for region, resources in hl_arr.region_resources:
+        region = list(hl_arr.region_resources.keys())[0]
         self.generate_low_level_aws_map(hl_arr)
         generator = TerraformGeneratorAWS(self.ll_map, self.ll_list)
-        provider_template = self.get_provider_template("aws")
+        provider_template = self.get_provider_template("aws", region)
         out = self.base.render(
             {
                 "providers": provider_template,

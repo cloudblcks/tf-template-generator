@@ -315,7 +315,7 @@ def compile_item(compiled, item, out_outputs, out_template, out_variables):
         compiled[item.uid] = True
         return out_outputs, out_template, out_variables
     else:
-        return "", "", ""
+        return out_outputs, out_template, out_variables
 
 
 class TerraformGeneratorAWS:
@@ -332,20 +332,14 @@ class TerraformGeneratorAWS:
         for item in self.ll_list:
             if len(item.depends_on) > 0:
                 for dep in item.depends_on:
-                    add_outputs, add_template, add_variables = compile_item(
+                    out_outputs, out_template, out_variables = compile_item(
                         compiled, dep, out_outputs, out_template, out_variables
                     )
-                    out_template += add_template
-                    out_outputs += add_outputs
-                    out_variables += add_variables
             # checking one more time in case it was already generated via dependencies
             if not compiled[item.uid]:
-                add_outputs, add_template, add_variables = compile_item(
+                out_outputs, out_template, out_variables = compile_item(
                     compiled, item, out_outputs, out_template, out_variables
                 )
-                out_template += add_template
-                out_outputs += add_outputs
-                out_variables += add_variables
 
         out = ServiceTemplate(
             service_name="All services",
