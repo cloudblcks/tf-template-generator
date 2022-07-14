@@ -71,6 +71,10 @@ jobs:
       run: |
         cd temp
         terraform plan
+        
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v2.0.0
+
 
     # Checks that all terraform configuration files are valid
     - name: tflint
