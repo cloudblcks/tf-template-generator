@@ -81,5 +81,17 @@ jobs:
       run: |
         cd temp
         tflint
+        
+    - name: Setup tfsec
+      run: |
+        set -xe
+        TFSEC_VERSION="latest"
+        wget -O - -q "$(wget -q https://api.github.com/repos/aquasecurity/tfsec/releases/${TFSEC_VERSION} -O - | grep -o -E "https://.+?tfsec-linux-amd64" | head -n1)" > tfsec
+        install tfsec /usr/local/bin/
+        
+    - name: tfsec
+      run: |
+        cd temp
+        tfsec
 
 
