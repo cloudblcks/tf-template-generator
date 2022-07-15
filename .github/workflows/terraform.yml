@@ -100,5 +100,13 @@ jobs:
         
     - name: checkov
       run: checkov --directory temp/
+      
+    - name: Terrascan IaC scanner
+      uses: tenable/terrascan-action@v1.4.1
+      with:
+        iac_dir: temp/
+        iac_type: terraform
+        
+
 
 
