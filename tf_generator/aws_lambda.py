@@ -3,8 +3,8 @@ import os
 
 from dotenv import load_dotenv
 
+import api_handler
 from generator import TerraformGenerator
-import main
 
 load_dotenv()
 TEMPLATES_MAP_PATH = os.path.join(os.getcwd(), "templates_map.json")
@@ -43,15 +43,9 @@ def lambda_handler_old(event, context):
 def lambda_handler_new(event, context):
     print(json.dumps(event))
     request = json.loads(event["body"])
+    version = request.get("version")
     action = request.get("action")
-    if action == "validate":
-        results = main._validate(request.get("data"))
-    elif action == "build":
-        results = main._build(request.get("data"))
-    elif action == "search":
-        search_results = main._search(request.get("keyword"), request.get("cloud"), request.get("tags"))
-        results = [result.to_json() for result in search_results]
-    else:
-        raise KeyError(f"Action {action} not recognised")
 
-    return {"statusCode": 200, "body": results}
+    response, status_code = api_handler.handle(version, action, data=request)
+
+    return {"statusCode": status_code, "body": response}

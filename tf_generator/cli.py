@@ -1,6 +1,6 @@
 import argparse
 import json
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import cloup
 from cloup.constraints import mutually_exclusive
@@ -78,8 +78,10 @@ def build(file, data, output_path):
     """
     if file:
         data = load_mapping(file)
+    else:
+        data = json.loads(data)
 
-    if not _validate(data):
+    if not _validate(data, verbose=True)[0]:
         exit("Input was invalid, please run validate to make sure it's valid")
 
     templates = _build(data)
@@ -118,7 +120,7 @@ def validate(file, data):
     else:
         data = json.loads(data)
 
-    return _validate(data)
+    return _validate(data, verbose=True)[0]
 
 
 @cli.command()
@@ -173,15 +175,17 @@ def _build(data):
     return templates
 
 
-def _validate(data):
-    is_valid = schema_validator.validate(data)
+def _validate(data, verbose=False) -> Tuple[bool, Optional[str]]:
+    is_valid, err_message = schema_validator.validate(data)
 
     if is_valid:
         print("Configuration is valid")
+    elif verbose:
+        print(err_message)
     else:
         print("Configuration isn't valid")
 
-    return is_valid
+    return is_valid, err_message
 
 
 def _search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str]]) -> List[ResourceDetails]:
