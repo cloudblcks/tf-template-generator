@@ -93,5 +93,12 @@ jobs:
       run: |
         cd temp
         tfsec
+        
+    - name: Setup checkov
+      run: |
+        pip3 install checkov
+        
+    - name: checkov
+      run: checkov --directory temp/
 
 
