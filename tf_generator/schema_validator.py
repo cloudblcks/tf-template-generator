@@ -1,13 +1,13 @@
-from typing import Dict
+from typing import Dict, Tuple, Optional
 
-from models.schemas import MAP_SCHEMA
 from schema import SchemaError
 
+from models.schemas import MAP_SCHEMA
 
-def validate(data: Dict) -> bool:
+
+def validate(data: Dict) -> Tuple[bool, Optional[str]]:
     try:
         MAP_SCHEMA.validate(data)
     except SchemaError as e:
-        print(e.code)
-        return False
-    return True
+        return False, e.code
+    return True, None
