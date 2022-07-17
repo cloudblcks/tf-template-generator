@@ -1,6 +1,7 @@
 #tfsec:ignore:aws-s3-enable-versioning tfsec:ignore:aws-s3-enable-bucket-logging
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
   #checkov:skip=CKV_AWS_144: no replication as it is not requested by the user
+  #checkov:skip=CKV_AWS_18: no logging implemented yet
   bucket = "{{ bucket_name }}"
 }
 
