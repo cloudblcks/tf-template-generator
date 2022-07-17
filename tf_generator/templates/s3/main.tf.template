@@ -2,6 +2,7 @@
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
   #checkov:skip=CKV_AWS_144: no replication as it is not requested by the user
   #checkov:skip=CKV_AWS_18: no logging implemented yet
+  #checkov:skip=CKV_AWS_21: no versioning implemented yet
   bucket = "{{ bucket_name }}"
 }
 
