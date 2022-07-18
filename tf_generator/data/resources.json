@@ -18,7 +18,7 @@
       },
       {
         "param": "versioning",
-        "description": "Defines wether the versioning is enabled for the bucket, default true",
+        "description": "Defines whether the versioning is enabled for the bucket, default true",
         "data_type": "bool",
         "required": false
       }
