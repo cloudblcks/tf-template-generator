@@ -276,7 +276,17 @@ class RDS(LowLevelDBItem):
 
 
 class S3(LowLevelStorageItem):
-    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set[LowLevelAWSItem] = None):
+    def __init__(
+        self,
+        new_id: str,
+        logging_bucket: "LoggingS3Bucket",
+        bucket_name: str = None,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
+        if not depends_on:
+            depends_on = set()
+        depends_on.add(logging_bucket)
+        self.logging_bucket = logging_bucket
         super().__init__(new_id, depends_on)
         self.template = load_template(TemplateLoader.S3)
         if not bucket_name:
@@ -284,8 +294,25 @@ class S3(LowLevelStorageItem):
         self.bucket_name = bucket_name
 
     def generate_config(self) -> TerraformConfig:
-        out_template = self.template.render({"uid": self.uid, "bucket_name": self.bucket_name})
+        out_template = self.template.render(
+            {
+                "uid": self.uid,
+                "bucket_name": self.bucket_name,
+                "logging_bucket_uid": self.logging_bucket.uid,
+                "is_logging": True if isinstance(self, LoggingS3Bucket) else False,
+            }
+        )
         return TerraformConfig(out_template, "", "")
+
+
+class LoggingS3Bucket(S3):
+    def __init__(
+        self,
+        new_id: str,
+        bucket_name: str = None,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
+        super().__init__(new_id, self, bucket_name, depends_on)
 
 
 class S3PublicWebsite(LowLevelStorageItem):
@@ -307,7 +334,7 @@ class S3PublicWebsite(LowLevelStorageItem):
 
 
 def compile_item(compiled, item, out_outputs, out_template, out_variables):
-    if not compiled[item.uid]:
+    if not compiled.get(item.uid):
         config = item.generate_config()
         out_template += config.main if config.main else ""
         out_variables += config.variables if config.variables else ""
