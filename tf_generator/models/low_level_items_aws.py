@@ -59,9 +59,14 @@ class VPC(LowLevelSharedItem):
         self,
         new_id: str,
         az_count: Optional[int],
+        logging_bucket: "LoggingS3Bucket",
         is_public: bool = False,
         depends_on: Set[LowLevelAWSItem] = None,
     ):
+        if not depends_on:
+            depends_on = set()
+        depends_on.add(logging_bucket)
+        self.logging_bucket = logging_bucket
         super().__init__(new_id, depends_on)
         self.template = load_template(TemplateLoader.VPC)
         if not az_count:
@@ -87,6 +92,7 @@ class VPC(LowLevelSharedItem):
                     "subnet_cidrs": self.subnet_cidrs,
                     "has_public_subnet": self.has_public_subnet,
                     "has_private_subnet": self.has_private_subnet,
+                    "logging_bucket_uid": self.logging_bucket.uid,
                 }
             )
         return TerraformConfig(out_template, "", "")
