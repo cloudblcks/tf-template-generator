@@ -299,7 +299,7 @@ class S3(LowLevelStorageItem):
                 "uid": self.uid,
                 "bucket_name": self.bucket_name,
                 "logging_bucket_uid": self.logging_bucket.uid,
-                "is_logging": True if isinstance(self, LoggingS3Bucket) else False,
+                "is_logging": isinstance(self, LoggingS3Bucket),
             }
         )
         return TerraformConfig(out_template, "", "")
