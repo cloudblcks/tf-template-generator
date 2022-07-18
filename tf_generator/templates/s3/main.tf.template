@@ -3,16 +3,21 @@
 {% endif %}
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
   #checkov:skip=CKV_AWS_144: no replication as it is not requested by the user
-  {%if is_versioning_enabled %}
-  versioning {
-        enabled = true
-    }
-  {% else %}
+  {% if not is_versioning_enabled %}
   #checkov:skip=CKV_AWS_21: versioning disabled by user
   {% endif %}
   #ts:skip=AWS.S3Bucket.IAM.High.0370
   bucket = "{{ bucket_name }}"
 }
+
+{%if is_versioning_enabled %}
+resource "aws_s3_bucket_versioning" "bucket-{{ uid }}-versioning" {
+  bucket = aws_s3_bucket.bucket-{{ uid }}.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+{% endif %}
 
 resource "aws_kms_key" "bucket-{{ uid }}-key" {
   description             = "This key is used to encrypt bucket {{ bucket_name }} objects"
