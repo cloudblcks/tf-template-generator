@@ -49,8 +49,12 @@ resource "aws_iam_instance_profile" "ec2_instance_{{ uid }}_instance_profile" {
 {% endif %}
 
 resource "aws_instance" "ec2_instance_{{ uid }}" {
+  #checkov:skip=CKV_AWS_135: EBS optimisation is not handled yet
   ami                    = "{{ aws_ami }}"
   instance_type          = "{{ aws_instance_type }}"
+
+  monitoring = true
+
   root_block_device {
       encrypted = true
   }

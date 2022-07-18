@@ -1,4 +1,6 @@
 resource "aws_vpc" "vpc-{{ vpc_uid }}" {
+  #checkov:skip=CKV2_AWS_11: VPC flow logging not handled yet
+  #checkov:skip=CKV2_AWS_12: no traffic default security group not implemented yet
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
