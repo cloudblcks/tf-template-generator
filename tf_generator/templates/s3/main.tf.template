@@ -1,7 +1,15 @@
+{%if not is_versioning_enabled %}
 #tfsec:ignore:aws-s3-enable-versioning
+{% endif %}
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
   #checkov:skip=CKV_AWS_144: no replication as it is not requested by the user
-  #checkov:skip=CKV_AWS_21: no versioning implemented yet
+  {%if is_versioning_enabled %}
+  versioning {
+        enabled = true
+    }
+  {% else %}
+  #checkov:skip=CKV_AWS_21: versioning disabled by user
+  {% endif %}
   #ts:skip=AWS.S3Bucket.IAM.High.0370
   bucket = "{{ bucket_name }}"
 }
