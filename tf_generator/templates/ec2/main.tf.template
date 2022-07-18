@@ -50,6 +50,7 @@ resource "aws_iam_instance_profile" "ec2_instance_{{ uid }}_instance_profile" {
 
 resource "aws_instance" "ec2_instance_{{ uid }}" {
   #checkov:skip=CKV_AWS_135: EBS optimisation is not handled yet
+  #ts:skip=AC-AW-IS-IN-M-0144
   ami                    = "{{ aws_ami }}"
   instance_type          = "{{ aws_instance_type }}"
 
