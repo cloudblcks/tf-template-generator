@@ -32,4 +32,4 @@
           id: server
       params:
         bucket_name: sample_frontend_01
-        versioning: false
+        versioning_enabled: false

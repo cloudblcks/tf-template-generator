@@ -280,6 +280,7 @@ class S3(LowLevelStorageItem):
         self,
         new_id: str,
         logging_bucket: "LoggingS3Bucket",
+        is_versioning_enabled: Optional[bool] = None,
         bucket_name: str = None,
         depends_on: Set[LowLevelAWSItem] = None,
     ):
@@ -292,6 +293,9 @@ class S3(LowLevelStorageItem):
         if not bucket_name:
             bucket_name = f"s3-{new_id}-{petname.Generate(3)}"
         self.bucket_name = bucket_name
+        if not is_versioning_enabled:
+            is_versioning_enabled = True
+        self.is_versioning_enabled = is_versioning_enabled
 
     def generate_config(self) -> TerraformConfig:
         out_template = self.template.render(
@@ -300,6 +304,7 @@ class S3(LowLevelStorageItem):
                 "bucket_name": self.bucket_name,
                 "logging_bucket_uid": self.logging_bucket.uid,
                 "is_logging": isinstance(self, LoggingS3Bucket),
+                "is_versioning_enabled": self.is_versioning_enabled,
             }
         )
         return TerraformConfig(out_template, "", "")
@@ -309,10 +314,11 @@ class LoggingS3Bucket(S3):
     def __init__(
         self,
         new_id: str,
+        is_versioning_enabled: Optional[bool] = None,
         bucket_name: str = None,
         depends_on: Set[LowLevelAWSItem] = None,
     ):
-        super().__init__(new_id, self, bucket_name, depends_on)
+        super().__init__(new_id, self, is_versioning_enabled, bucket_name, depends_on)
 
 
 class S3PublicWebsite(LowLevelStorageItem):

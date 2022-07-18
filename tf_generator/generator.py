@@ -34,7 +34,7 @@ class TerraformGenerator:
     def __init__(self, base_template: str = None):
         self.ll_map: Dict[str, LowLevelAWSItem] = {}
         self.ll_list: List[LowLevelAWSItem] = []
-        self.logging_bucket = self.setupLoggingBucket()
+        self.logging_bucket = self.setup_logging_bucket()
         if base_template:
             self.base = Template(base_template)
         else:
@@ -81,7 +81,7 @@ class TerraformGenerator:
                 elif item.category == ResourceCategory.STORAGE:
                     self.high_to_low_mapping_storage(item)
 
-    def setupLoggingBucket(self) -> LoggingS3Bucket:
+    def setup_logging_bucket(self) -> LoggingS3Bucket:
         return LoggingS3Bucket(generate_id())
 
     def high_to_low_mapping_storage(self, storage: HighLevelResource):
@@ -90,6 +90,11 @@ class TerraformGenerator:
             raise CloudblocksValidationException("Storage item cannot bind TO another element")
         for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.DATABASE):
             raise CloudblocksValidationException("Storage item cannot bind with a database")
+
+        is_versioning_enabled: Optional[bool] = None
+        if "versioning_enabled" in storage.params:
+            is_versioning_enabled = bool(storage.params["versioning_enabled"])
+
         for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.INTERNET):
             s3 = S3PublicWebsite(storage.uid)
             self.add_low_level_item(s3)
@@ -98,9 +103,9 @@ class TerraformGenerator:
             if "bucket_name" in storage.params:
                 bucket_name = storage.params["bucket_name"]
                 assert isinstance(bucket_name, str)
-                self.add_low_level_item(S3(storage.uid, self.logging_bucket, bucket_name))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket, is_versioning_enabled, bucket_name))
             else:
-                self.add_low_level_item(S3(storage.uid, self.logging_bucket))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket, is_versioning_enabled))
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
