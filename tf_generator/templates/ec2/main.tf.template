@@ -1,39 +1,32 @@
 {% if s3_buckets|length > 0  %}
 resource "aws_iam_policy" "ec2_instance_{{ uid }}_policy" {
-  policy = <<EOT
-{
-    "Version": "2008-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": ["s3:ListBucket", "s3:*Object"],
-        "Resource": [
-        {% for bucket in s3_buckets %}
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+    {
+        Effect = "Allow",
+        Action = ["s3:ListBucket", "s3:*Object"],
+        Resource = [
+         {% for bucket in s3_buckets %}
         "${aws_s3_bucket.bucket-{{ bucket.uid }}.arn}",
         {% endfor %}
         ]
-      }
+    }
     ]
   })
 }
-EOT
-}
 
 resource "aws_iam_role" "ec2_instance_{{ uid }}_role" {
-  assume_role_policy = <<EOT
+  assume_role_policy = jsonencode({
+  Version = "2012-10-17",
+  Statement = [
   {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": "sts:AssumeRole",
-        "Principal": {
-          "Service": "ec2. amazonaws.com"
-        }
-      }
-    ]
+    Effect = "Allow",
+    Action = "sts:AssumeRole",
+    Principal = {Service = "ec2. amazonaws.com"}
   }
-  EOT
+  ]
+  })
 }
 
 resource "aws_iam_policy_attachment" "ec2_instance_{{ uid }}_policy_attachment" {

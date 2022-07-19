@@ -31,4 +31,4 @@
         - direction: from
           id: server
       params:
-        bucket_name: sample_frontend_01
+        bucket_name: sample-frontend-01
