@@ -46,13 +46,13 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
   #ts:skip=AC-AW-IS-IN-M-0144
   ami                    = "{{ aws_ami }}"
   instance_type          = "{{ aws_instance_type }}"
-
   monitoring = true
 
   root_block_device {
       encrypted = true
   }
   metadata_options {
+     http_endpoint = "enabled"
      http_tokens = "required"
      }
   count                  = {{ instance_count }}
