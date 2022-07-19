@@ -23,7 +23,7 @@ resource "aws_iam_role" "ec2_instance_{{ uid }}_role" {
   {
     Effect = "Allow",
     Action = "sts:AssumeRole",
-    Principal = {Service = "ec2. amazonaws.com"}
+    Principal = {Service = "ec2.amazonaws.com"}
   }
   ]
   })
