@@ -299,7 +299,7 @@ class S3(LowLevelStorageItem):
         if not bucket_name:
             bucket_name = f"s3-{new_id}-{petname.Generate(3)}"
         self.bucket_name = bucket_name
-        if not is_versioning_enabled:
+        if is_versioning_enabled is None:
             is_versioning_enabled = True
         self.is_versioning_enabled = is_versioning_enabled
 
