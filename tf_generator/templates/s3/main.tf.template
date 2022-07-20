@@ -1,7 +1,6 @@
-#tfsec:ignore:aws-s3-enable-versioning tfsec:ignore:aws-s3-enable-bucket-logging
+#tfsec:ignore:aws-s3-enable-versioning
 resource "aws_s3_bucket" "bucket-{{ uid }}" {
   #checkov:skip=CKV_AWS_144: no replication as it is not requested by the user
-  #checkov:skip=CKV_AWS_18: no logging implemented yet
   #checkov:skip=CKV_AWS_21: no versioning implemented yet
   #ts:skip=AWS.S3Bucket.IAM.High.0370
   bucket = "{{ bucket_name }}"
@@ -12,6 +11,15 @@ resource "aws_kms_key" "bucket-{{ uid }}-key" {
   deletion_window_in_days = 10
   enable_key_rotation = true
 }
+
+{% if is_logging_bucket %}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl-{{ uid }}" {
+  bucket = aws_s3_bucket.bucket-{{ uid }}.id
+  acl    = "log-delivery-write"
+}
+
+{% endif %}
 
 resource "aws_s3_bucket_public_access_block" "bucket-{{ uid }}-public-access" {
   bucket = aws_s3_bucket.bucket-{{ uid }}.id
@@ -31,3 +39,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "bucket-{{ uid }}-
     }
   }
 }
+
+resource "aws_s3_bucket_logging" "logging-{{ uid }}" {
+  bucket = aws_s3_bucket.bucket-{{ uid }}.bucket
+
+  target_bucket = aws_s3_bucket.bucket-{{ logging_bucket_uid }}.id
+  target_prefix = "log-{{ bucket_name }}/"
+}
+

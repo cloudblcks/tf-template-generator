@@ -21,6 +21,7 @@ from models.low_level_items_aws import (
     S3,
     LowLevelComputeItem,
     EC2,
+    LoggingS3Bucket,
 )
 from models.tf_type_mapping import ResourceCategory
 from template_loader import load_template
@@ -33,6 +34,7 @@ class TerraformGenerator:
     def __init__(self, base_template: str = None):
         self.ll_map: Dict[str, LowLevelAWSItem] = {}
         self.ll_list: List[LowLevelAWSItem] = []
+        self.logging_bucket = self.setupLoggingBucket()
         if base_template:
             self.base = Template(base_template)
         else:
@@ -79,6 +81,9 @@ class TerraformGenerator:
                 elif item.category == ResourceCategory.STORAGE:
                     self.high_to_low_mapping_storage(item)
 
+    def setupLoggingBucket(self) -> LoggingS3Bucket:
+        return LoggingS3Bucket(generate_id())
+
     def high_to_low_mapping_storage(self, storage: HighLevelResource):
         s3: Optional[LowLevelStorageItem] = None
         for _ in (x for x in storage.bindings if x.direction == HighLevelBindingDirection.TO):
@@ -93,9 +98,9 @@ class TerraformGenerator:
             if "bucket_name" in storage.params:
                 bucket_name = storage.params["bucket_name"]
                 assert isinstance(bucket_name, str)
-                self.add_low_level_item(S3(storage.uid, bucket_name))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket, bucket_name))
             else:
-                self.add_low_level_item(S3(storage.uid))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket))
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
