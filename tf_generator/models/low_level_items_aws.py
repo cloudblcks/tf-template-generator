@@ -59,9 +59,14 @@ class VPC(LowLevelSharedItem):
         self,
         new_id: str,
         az_count: Optional[int],
+        logging_bucket: "LoggingS3Bucket",
         is_public: bool = False,
         depends_on: Set[LowLevelAWSItem] = None,
     ):
+        if not depends_on:
+            depends_on = set()
+        depends_on.add(logging_bucket)
+        self.logging_bucket = logging_bucket
         super().__init__(new_id, depends_on)
         self.template = load_template(TemplateLoader.VPC)
         if not az_count:
@@ -87,6 +92,7 @@ class VPC(LowLevelSharedItem):
                     "subnet_cidrs": self.subnet_cidrs,
                     "has_public_subnet": self.has_public_subnet,
                     "has_private_subnet": self.has_private_subnet,
+                    "logging_bucket_uid": self.logging_bucket.uid,
                 }
             )
         return TerraformConfig(out_template, "", "")
@@ -276,16 +282,49 @@ class RDS(LowLevelDBItem):
 
 
 class S3(LowLevelStorageItem):
-    def __init__(self, new_id: str, bucket_name: str = None, depends_on: Set[LowLevelAWSItem] = None):
+    def __init__(
+        self,
+        new_id: str,
+        logging_bucket: "LoggingS3Bucket",
+        is_versioning_enabled: Optional[bool] = None,
+        bucket_name: str = None,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
+        if not depends_on:
+            depends_on = set()
+        depends_on.add(logging_bucket)
+        self.logging_bucket = logging_bucket
         super().__init__(new_id, depends_on)
         self.template = load_template(TemplateLoader.S3)
         if not bucket_name:
             bucket_name = f"s3-{new_id}-{petname.Generate(3)}"
         self.bucket_name = bucket_name
+        if is_versioning_enabled is None:
+            is_versioning_enabled = True
+        self.is_versioning_enabled = is_versioning_enabled
 
     def generate_config(self) -> TerraformConfig:
-        out_template = self.template.render({"uid": self.uid, "bucket_name": self.bucket_name})
+        out_template = self.template.render(
+            {
+                "uid": self.uid,
+                "bucket_name": self.bucket_name,
+                "logging_bucket_uid": self.logging_bucket.uid,
+                "is_logging": isinstance(self, LoggingS3Bucket),
+                "is_versioning_enabled": self.is_versioning_enabled,
+            }
+        )
         return TerraformConfig(out_template, "", "")
+
+
+class LoggingS3Bucket(S3):
+    def __init__(
+        self,
+        new_id: str,
+        is_versioning_enabled: Optional[bool] = None,
+        bucket_name: str = None,
+        depends_on: Set[LowLevelAWSItem] = None,
+    ):
+        super().__init__(new_id, self, is_versioning_enabled, bucket_name, depends_on)
 
 
 class S3PublicWebsite(LowLevelStorageItem):
@@ -307,7 +346,7 @@ class S3PublicWebsite(LowLevelStorageItem):
 
 
 def compile_item(compiled, item, out_outputs, out_template, out_variables):
-    if not compiled[item.uid]:
+    if not compiled.get(item.uid):
         config = item.generate_config()
         out_template += config.main if config.main else ""
         out_variables += config.variables if config.variables else ""

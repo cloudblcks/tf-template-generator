@@ -21,6 +21,7 @@ from models.low_level_items_aws import (
     S3,
     LowLevelComputeItem,
     EC2,
+    LoggingS3Bucket,
 )
 from models.tf_type_mapping import ResourceCategory
 from template_loader import load_template
@@ -33,6 +34,7 @@ class TerraformGenerator:
     def __init__(self, base_template: str = None):
         self.ll_map: Dict[str, LowLevelAWSItem] = {}
         self.ll_list: List[LowLevelAWSItem] = []
+        self.logging_bucket = self.setup_logging_bucket()
         if base_template:
             self.base = Template(base_template)
         else:
@@ -79,12 +81,20 @@ class TerraformGenerator:
                 elif item.category == ResourceCategory.STORAGE:
                     self.high_to_low_mapping_storage(item)
 
+    def setup_logging_bucket(self) -> LoggingS3Bucket:
+        return LoggingS3Bucket(generate_id())
+
     def high_to_low_mapping_storage(self, storage: HighLevelResource):
         s3: Optional[LowLevelStorageItem] = None
         for _ in (x for x in storage.bindings if x.direction == HighLevelBindingDirection.TO):
             raise CloudblocksValidationException("Storage item cannot bind TO another element")
         for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.DATABASE):
             raise CloudblocksValidationException("Storage item cannot bind with a database")
+
+        is_versioning_enabled: Optional[bool] = None
+        if "versioning_enabled" in storage.params:
+            is_versioning_enabled = bool(storage.params["versioning_enabled"])
+
         for _ in (x for x in storage.bindings if x.target.category == ResourceCategory.INTERNET):
             s3 = S3PublicWebsite(storage.uid)
             self.add_low_level_item(s3)
@@ -93,9 +103,9 @@ class TerraformGenerator:
             if "bucket_name" in storage.params:
                 bucket_name = storage.params["bucket_name"]
                 assert isinstance(bucket_name, str)
-                self.add_low_level_item(S3(storage.uid, bucket_name))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket, is_versioning_enabled, bucket_name))
             else:
-                self.add_low_level_item(S3(storage.uid))
+                self.add_low_level_item(S3(storage.uid, self.logging_bucket, is_versioning_enabled))
 
     def high_to_low_mapping_compute(self, compute: HighLevelResource):
         needs_internet_access = False
@@ -121,7 +131,9 @@ class TerraformGenerator:
             if "az_count" in compute.params:
                 assert str(compute.params["az_count"]).isnumeric()
                 az_count = int(str(compute.params["az_count"]))
-            vpc = VPC(generate_id(), az_count=az_count, is_public=needs_internet_access)
+            vpc = VPC(
+                generate_id(), logging_bucket=self.logging_bucket, az_count=az_count, is_public=needs_internet_access
+            )
             self.add_low_level_item(vpc)
 
         linked_storage: Set[LowLevelStorageItem] = set()
@@ -179,7 +191,7 @@ class TerraformGenerator:
             if "az_count" in docker.params:
                 assert str(docker.params["az_count"]).isnumeric()
                 az_count = int(str(docker.params["az_count"]))
-            vpc = VPC(generate_id(), az_count=az_count)
+            vpc = VPC(generate_id(), az_count=az_count, logging_bucket=self.logging_bucket)
             self.add_low_level_item(vpc)
 
         linked_storage: Set[LowLevelStorageItem] = set()

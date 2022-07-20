@@ -104,3 +104,4 @@ dmypy.json
 tf_generator/package
 *.DS_Store
 temp/
+*.py~

@@ -15,6 +15,12 @@
         "description": "Unique identifier for the bucket. Must be unique across all AWS accounts. If not provided, default name will be generated",
         "data_type": "string",
         "required": false
+      },
+      {
+        "param": "versioning_enabled",
+        "description": "Defines whether the versioning is enabled for the bucket, default true",
+        "data_type": "bool",
+        "required": false
       }
     ]
   },
