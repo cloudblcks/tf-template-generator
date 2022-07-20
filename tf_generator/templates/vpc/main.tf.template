@@ -1,10 +1,15 @@
 resource "aws_vpc" "vpc-{{ vpc_uid }}" {
-  #checkov:skip=CKV2_AWS_11: VPC flow logging not handled yet
-  #ts:skip=AWS.VPC.Logging.Medium.0470
   #checkov:skip=CKV2_AWS_12: no traffic default security group not implemented yet
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
+}
+
+resource "aws_flow_log" "flow-log-{{ vpc_uid }}" {
+  log_destination      = aws_s3_bucket.bucket-{{ logging_bucket_uid }}.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.vpc-{{ vpc_uid }}.id
 }
 
 data "aws_region" "current" {}

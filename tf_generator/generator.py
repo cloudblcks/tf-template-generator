@@ -131,7 +131,9 @@ class TerraformGenerator:
             if "az_count" in compute.params:
                 assert str(compute.params["az_count"]).isnumeric()
                 az_count = int(str(compute.params["az_count"]))
-            vpc = VPC(generate_id(), az_count=az_count, is_public=needs_internet_access)
+            vpc = VPC(
+                generate_id(), logging_bucket=self.logging_bucket, az_count=az_count, is_public=needs_internet_access
+            )
             self.add_low_level_item(vpc)
 
         linked_storage: Set[LowLevelStorageItem] = set()
@@ -189,7 +191,7 @@ class TerraformGenerator:
             if "az_count" in docker.params:
                 assert str(docker.params["az_count"]).isnumeric()
                 az_count = int(str(docker.params["az_count"]))
-            vpc = VPC(generate_id(), az_count=az_count)
+            vpc = VPC(generate_id(), az_count=az_count, logging_bucket=self.logging_bucket)
             self.add_low_level_item(vpc)
 
         linked_storage: Set[LowLevelStorageItem] = set()
