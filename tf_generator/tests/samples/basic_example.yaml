@@ -7,7 +7,7 @@
           id: s3-frontend
       params:
         aws_instance_type: t2.micro
-        aws_ami: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        aws_ami: ami-0d71ea30463e0ff8d
         is_public: true
         az_count: 1
         user_data: |
@@ -31,5 +31,5 @@
         - direction: from
           id: server
       params:
-        bucket_name: sample_frontend_01
+        bucket_name: sample-frontend-01
         versioning_enabled: True
