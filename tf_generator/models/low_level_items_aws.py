@@ -178,7 +178,8 @@ class EC2(LowLevelComputeItem):
                     "aws_instance_type": self.aws_ec2_instance_type,
                     "instance_count": self.instance_count,
                     "user_data": self.user_data,
-                    "subnet_id": f"{'public' if self.needs_internet_access else 'private'}-subnet-1-{ self.vpc.uid }"
+                    "subnet_id": f"{'public' if self.needs_internet_access else 'private'}-subnet-1-{ self.vpc.uid }",
+                    "is_public": self.needs_internet_access
                     # "vpc_security_groups": self.vpc.
                 }
             )
@@ -246,6 +247,7 @@ class EC2Docker(LowLevelComputeItem):
         self.container_name = container_name
         self.volume_path = volume_path
         self.volume_name = volume_name
+        self.is_public = needs_internet_access
 
     def generate_config(self) -> TerraformConfig:
         out_template = ""
@@ -271,6 +273,7 @@ class EC2Docker(LowLevelComputeItem):
                     "container_name": self.container_name,
                     "volume_path": self.volume_path,
                     "volume_name": self.volume_name,
+                    "is_public": self.is_public,
                 }
             )
 

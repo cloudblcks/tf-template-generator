@@ -55,7 +55,7 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
      http_endpoint = "enabled"
      http_tokens = "required"
      }
-  count                  = {{ instance_count }}
+# count                  = {{ instance_count }}
 #  vpc_security_group_ids = [
 #    {% for vpc_security_group in vpc_security_groups %}
 #    {{ vpc_security_group }},
@@ -68,9 +68,17 @@ EOF
   {% if s3_buckets|length > 0  %}
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_{{ uid }}_instance_profile.name
   {% endif %}
+
+  {% if is_public %}
+  associate_public_ip_address = true
+  {% endif %}
 }
 
-
-
+{% if is_public %}
+resource "aws_eip" "eip-{{ uid }}" {
+  instance = aws_instance.ec2_instance_{{ uid }}.id
+  vpc      = true
+}
+{% endif %}
 
 

@@ -297,7 +297,6 @@ class TerraformGenerator:
         #     rds.vpc = linked_compute[0].vpc
         # else:
         #     rds.vpc = VPC(generate_id())
-        # # TODO: handle subnets
         # low_level_map[rds._id] = rds
         pass
 
