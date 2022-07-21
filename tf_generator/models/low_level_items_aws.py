@@ -138,7 +138,9 @@ class EC2(LowLevelComputeItem):
         user_data: Optional[str] = None,
         needs_internet_access=False,
         linked_storage: Set[LowLevelStorageItem] = None,
+        public_key: Optional[str] = None,
         depends_on: Set[LowLevelAWSItem] = None,
+        ssh_enabled: Optional[bool] = None,
     ):
         if depends_on is None:
             depends_on = set()
@@ -166,6 +168,14 @@ class EC2(LowLevelComputeItem):
             user_data = ""
         self.user_data = user_data
 
+        if not public_key:
+            public_key = ""
+        self.public_key = public_key
+
+        if ssh_enabled is None:
+            ssh_enabled = False
+        self.ssh_enabled = ssh_enabled
+
     def generate_config(self) -> TerraformConfig:
         out_template = ""
         if self.template:
@@ -177,9 +187,11 @@ class EC2(LowLevelComputeItem):
                     "aws_ami": self.aws_ami,
                     "aws_instance_type": self.aws_ec2_instance_type,
                     "instance_count": self.instance_count,
-                    "user_data": self.user_data,
+                    "init_script": self.user_data,
                     "subnet_id": f"{'public' if self.needs_internet_access else 'private'}-subnet-1-{ self.vpc.uid }",
-                    "is_public": self.needs_internet_access
+                    "is_public": self.needs_internet_access,
+                    "public_key": self.public_key,
+                    "ssh_enabled": self.ssh_enabled
                     # "vpc_security_groups": self.vpc.
                 }
             )

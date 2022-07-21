@@ -10,8 +10,8 @@
         aws_ami: ami-0d71ea30463e0ff8d
         is_public: true
         az_count: 1
-        user_data: |
-          \#!/bin/bash
+        init_script: |
+          #!/bin/bash
           sudo yum update
           sudo yum install -y docker
           sudo usermod -a -G docker ec2-user
@@ -24,6 +24,8 @@
           git clone https://github.com/airbytehq/airbyte.git
           cd airbyte
           docker compose up
+        ssh_enabled: True
+        public_key: ssh-ed25519 ...
     
     s3-frontend:
       resource: s3
