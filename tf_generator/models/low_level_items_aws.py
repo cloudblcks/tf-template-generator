@@ -132,8 +132,9 @@ class EC2(LowLevelComputeItem):
         self,
         new_id,
         vpc: VPC,
-        aws_ami: str,
         aws_ec2_instance_type: str,
+        aws_ami: str = None,
+        image_regex: str = None,
         instance_count: Optional[int] = None,
         user_data: Optional[str] = None,
         needs_internet_access=False,
@@ -154,6 +155,7 @@ class EC2(LowLevelComputeItem):
         super().__init__(new_id, vpc, depends_on)
 
         self.aws_ami = aws_ami
+        self.image_regex = image_regex
         self.aws_ec2_instance_type = aws_ec2_instance_type
 
         if not instance_count:
@@ -185,6 +187,7 @@ class EC2(LowLevelComputeItem):
                     "vpc_uid": self.vpc.uid,
                     "s3_buckets": self.linked_storage,
                     "aws_ami": self.aws_ami,
+                    "image_regex": self.image_regex,
                     "aws_instance_type": self.aws_ec2_instance_type,
                     "instance_count": self.instance_count,
                     "init_script": self.user_data,
@@ -205,7 +208,6 @@ class EC2Docker(LowLevelComputeItem):
         self,
         new_id,
         vpc: VPC,
-        aws_ami: str,
         aws_ec2_instance_type: str,
         image_url: str,
         container_name: str,
@@ -215,6 +217,8 @@ class EC2Docker(LowLevelComputeItem):
         autoscale_min: int,
         autoscale_max: int,
         autoscale_target: int,
+        aws_ami: str = None,
+        image_regex: str = None,
         cpu_cores: Optional[int] = None,
         memory: Optional[int] = None,
         desired_count: Optional[int] = None,
@@ -239,6 +243,7 @@ class EC2Docker(LowLevelComputeItem):
         self.linked_storage = linked_storage
         self.template = load_template(TemplateLoader.DOCKER)
         self.aws_ami = aws_ami
+        self.image_regex = image_regex
         self.aws_ec2_instance_type = aws_ec2_instance_type
         self.task_definition_family_name = f"taskdef-{new_id}-{petname.Generate(3)}"
         self.image_url = image_url
@@ -271,6 +276,7 @@ class EC2Docker(LowLevelComputeItem):
                     "s3_buckets": self.linked_storage,
                     "aws_ecs_cluster_name": self.aws_ecs_cluster_name,
                     "aws_ami": self.aws_ami,
+                    "image_regex": self.image_regex,
                     "aws_ec2_instance_type": self.aws_ec2_instance_type,
                     "task_definition_family_name": self.task_definition_family_name,
                     "image_url": self.image_url,

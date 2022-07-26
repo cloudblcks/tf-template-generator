@@ -1,4 +1,23 @@
 {% if s3_buckets|length > 0  %}
+
+{% if image_regex is defined and image_regex is not none %}
+data "aws_ami" "ec2_ami_{{ uid }}" {
+  most_recent      = true
+  name_regex       = "(?i){{ image_regex }}"
+  owners = ["self", "amazon", "aws-marketplace"]
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+{% endif %}
+
 resource "aws_iam_policy" "ec2_instance_{{ uid }}_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
@@ -44,7 +63,12 @@ resource "aws_iam_instance_profile" "ec2_instance_{{ uid }}_instance_profile" {
 resource "aws_instance" "ec2_instance_{{ uid }}" {
   #checkov:skip=CKV_AWS_135: EBS optimisation is not handled yet
   #ts:skip=AC-AW-IS-IN-M-0144
+{% if aws_ami is defined and aws_ami is not none %}
   ami                    = "{{ aws_ami }}"
+{% else %}
+  ami                    = data.aws_ami.ec2_ami_{{ uid }}.id
+{% endif %}
+
   instance_type          = "{{ aws_instance_type }}"
   monitoring = true
 
