@@ -148,8 +148,14 @@ class TerraformGenerator:
                 assert isinstance(storage, LowLevelStorageItem)
                 linked_storage.add(storage)
 
-        assert isinstance(compute.params["aws_ami"], str)
-        aws_ami: str = compute.params["aws_ami"]
+        aws_ami: Optional[str] = None
+        image_regex: Optional[str] = None
+        if "aws_ami" in compute.params:
+            assert isinstance(compute.params["aws_ami"], str)
+            aws_ami = compute.params["aws_ami"]
+        else:
+            assert isinstance(compute.params["image_regex"], str)
+            image_regex = compute.params["image_regex"]
 
         assert isinstance(compute.params["aws_instance_type"], str)
         aws_ec2_instance_type: str = compute.params["aws_instance_type"]
@@ -168,6 +174,7 @@ class TerraformGenerator:
             compute.uid,
             vpc=vpc,
             aws_ami=aws_ami,
+            image_regex=image_regex,
             aws_ec2_instance_type=aws_ec2_instance_type,
             instance_count=instance_count,
             user_data=user_data,
@@ -213,8 +220,14 @@ class TerraformGenerator:
             assert isinstance(docker.params["aws_ecs_cluster_name"], str)
             cluster_name = docker.params["aws_ecs_cluster_name"]
 
-        assert isinstance(docker.params["aws_ami"], str)
-        aws_ami: str = docker.params["aws_ami"]
+        aws_ami: Optional[str] = None
+        image_regex: Optional[str] = None
+        if "aws_ami" in docker.params:
+            assert isinstance(docker.params["aws_ami"], str)
+            aws_ami = docker.params["aws_ami"]
+        else:
+            assert isinstance(docker.params["image_regex"], str)
+            image_regex = docker.params["image_regex"]
 
         assert isinstance(docker.params["aws_instance_type"], str)
         aws_ec2_instance_type: str = docker.params["aws_instance_type"]
@@ -272,6 +285,7 @@ class TerraformGenerator:
             vpc,
             healthcheck_path=healthcheck_path,
             aws_ami=aws_ami,
+            image_regex=image_regex,
             aws_ec2_instance_type=aws_ec2_instance_type,
             aws_ecs_cluster_name=cluster_name,
             image_url=image_url,

@@ -7,7 +7,8 @@
           id: s3-frontend
       params:
         aws_instance_type: t2.micro
-        aws_ami: ami-0d71ea30463e0ff8d
+#        aws_ami: ami-0d71ea30463e0ff8d
+        image_regex: amazon linux
         is_public: true
         az_count: 1
         user_data: |
