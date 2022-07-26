@@ -61,6 +61,12 @@
         "required": false
       },
       {
+        "param": "public_key_path",
+        "description": "Path to the public part of the SSH keypair to be used for SSH access",
+        "data_type": "string",
+        "required": false
+      },
+      {
         "param": "instance_count",
         "description": "Number of VM instances, default 1",
         "data_type": "number",

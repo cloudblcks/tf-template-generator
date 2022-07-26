@@ -168,7 +168,10 @@ class TerraformGenerator:
         if "public_key" in compute.params:
             assert isinstance(compute.params["public_key"], str)
             ssh_pubkey = compute.params["public_key"]
-
+        elif "public_key_path" in compute.params:
+            assert isinstance(compute.params["public_key_path"], str)
+            with open(os.path.expanduser(compute.params["public_key_path"])) as f:
+                ssh_pubkey = f.read()
         ssh_enabled: Optional[bool] = None
         if "ssh_enabled" in compute.params:
             ssh_enabled = bool(compute.params["ssh_enabled"])
