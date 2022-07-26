@@ -24,7 +24,7 @@ resource "aws_iam_policy" "ec2_instance_{{ uid }}_policy" {
     Statement = [
     {
         Effect = "Allow",
-        Action = ["s3:ListBucket", "s3:*Object"],
+        Action = ["s3:ListBucket", "s3:DeleteObject", "s3:CopyObject", "s3:GetObject", "s3:HeadObject", "s3:PutObject", "s3:RestoreObject"],
         Resource = [
          {% for bucket in s3_buckets %}
         "${aws_s3_bucket.bucket-{{ bucket.uid }}.arn}",
@@ -79,22 +79,75 @@ resource "aws_instance" "ec2_instance_{{ uid }}" {
      http_endpoint = "enabled"
      http_tokens = "required"
      }
-  count                  = {{ instance_count }}
-#  vpc_security_group_ids = [
-#    {% for vpc_security_group in vpc_security_groups %}
-#    {{ vpc_security_group }},
-#    {%endfor%}
-#  ]
+# count                  = {{ instance_count }}
+  {% if ssh_enabled %}
+  vpc_security_group_ids = [
+    aws_security_group.allow_ssh_{{ uid }}.id
+  ]
+  {% endif %}
   user_data              = <<EOF
-  {{ user_data }}
+{{ init_script }}
 EOF
   subnet_id              = aws_subnet.{{ subnet_id }}.id
   {% if s3_buckets|length > 0  %}
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_{{ uid }}_instance_profile.name
   {% endif %}
+  {% if ssh_enabled %}
+  key_name = "ssh-key-{{ uid }}"
+  {% endif %}
+  {% if is_public %}
+  #checkov:skip=CKV_AWS_88: User has explicitly selected to make this VM public
+  associate_public_ip_address = true
+  {% endif %}
 }
 
+{% if ssh_enabled %}
+resource "aws_key_pair" "ssh-key-{{ uid }}" {
+  key_name   = "ssh-key-{{ uid }}"
+  public_key = "{{ public_key }}"
+}
+{% endif %}
 
+{% if is_public %}
+resource "aws_eip" "eip-{{ uid }}" {
+  instance = aws_instance.ec2_instance_{{ uid }}.id
+  vpc      = true
+}
 
+output "instance_ip_{{ uid }}" {
+  description = "The public ip for ssh access"
+  value       = aws_eip.eip-{{ uid }}.public_ip
+}
+{% endif %}
+
+{% if ssh_enabled %}
+#tfsec:ignore:aws-vpc-no-public-ingress-sgr
+#tfsec:ignore:aws-vpc-no-public-egress-sgr
+resource "aws_security_group" "allow_ssh_{{ uid }}" {
+#checkov:skip=CKV_AWS_24: user has explicitly selected to give SSH access to this VM
+#ts:skip=AC_AWS_0227: user has explicitly selected to give SSH access to this VM
+  name        = "allow_ssh_{{ uid }}"
+  description = "Allow SSH inbound traffic"
+  vpc_id      = aws_vpc.vpc-{{ vpc_uid }}.id
+
+  ingress {
+    description      = "SSH"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    description      = "Allow outbound access"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+{% endif %}
 
 

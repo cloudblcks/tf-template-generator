@@ -11,8 +11,8 @@
         image_regex: amazon linux
         is_public: true
         az_count: 1
-        user_data: |
-          \#!/bin/bash
+        init_script: |
+          #!/bin/bash
           sudo yum update
           sudo yum install -y docker
           sudo usermod -a -G docker ec2-user
@@ -25,6 +25,8 @@
           git clone https://github.com/airbytehq/airbyte.git
           cd airbyte
           docker compose up
+        ssh_enabled: True
+        public_key_path: ~/.ssh/id_ed25519.pub
     
     s3-frontend:
       resource: s3

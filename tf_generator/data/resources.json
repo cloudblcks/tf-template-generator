@@ -49,8 +49,20 @@
         "required": true
       },
       {
-        "param": "user_data",
-        "description": "User data to be used to configure the VM when it is launched",
+        "param": "init_script",
+        "description": "Script to be executed to configure the VM when it is initialised",
+        "data_type": "string",
+        "required": false
+      },
+      {
+        "param": "public_key",
+        "description": "Public part of the SSH keypair to be used for SSH access",
+        "data_type": "string",
+        "required": false
+      },
+      {
+        "param": "public_key_path",
+        "description": "Path to the public part of the SSH keypair to be used for SSH access",
         "data_type": "string",
         "required": false
       },

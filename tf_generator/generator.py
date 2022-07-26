@@ -166,9 +166,21 @@ class TerraformGenerator:
             instance_count = int(str(compute.params["instance_count"]))
 
         user_data: Optional[str] = None
-        if "user_data" in compute.params:
-            assert isinstance(compute.params["user_data"], str)
-            user_data = compute.params["user_data"]
+        if "init_script" in compute.params:
+            assert isinstance(compute.params["init_script"], str)
+            user_data = compute.params["init_script"]
+
+        ssh_pubkey: Optional[str] = None
+        if "public_key" in compute.params:
+            assert isinstance(compute.params["public_key"], str)
+            ssh_pubkey = compute.params["public_key"]
+        elif "public_key_path" in compute.params:
+            assert isinstance(compute.params["public_key_path"], str)
+            with open(os.path.expanduser(compute.params["public_key_path"])) as f:
+                ssh_pubkey = f.read().rstrip("\n")
+        ssh_enabled: Optional[bool] = None
+        if "ssh_enabled" in compute.params:
+            ssh_enabled = bool(compute.params["ssh_enabled"])
 
         ec2 = EC2(
             compute.uid,
@@ -180,6 +192,8 @@ class TerraformGenerator:
             user_data=user_data,
             needs_internet_access=needs_internet_access,
             linked_storage=linked_storage,
+            public_key=ssh_pubkey,
+            ssh_enabled=ssh_enabled,
         )
         self.add_low_level_item(ec2)
 
@@ -311,7 +325,6 @@ class TerraformGenerator:
         #     rds.vpc = linked_compute[0].vpc
         # else:
         #     rds.vpc = VPC(generate_id())
-        # # TODO: handle subnets
         # low_level_map[rds._id] = rds
         pass
 
