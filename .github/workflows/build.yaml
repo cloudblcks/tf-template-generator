@@ -3,59 +3,62 @@ name: Build executables
 on:
   push:
     branches:
-    - "main"
-    - "feature/build_cli_executable"
+      - "main"
+      - "feature/build_cli_executable"
   workflow_dispatch:
 
 jobs:
   build_linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Build Python Executable - Linux
-      uses: eric2788/pyinstaller-build@0.1.3
-      with:
-        main: tf_generator/cli
-        python_version: 3.10.4
-        pyinstaller_version: 5.2
-        artifact: clbx
-        use-dependencies: true
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: clbx
-        path: dist
+      - uses: actions/checkout@v3
+      - name: Build Python Executable - Linux
+        uses: cloudblcks/pyinstaller-build@latest
+        with:
+          main: tf_generator/cli
+          python_version: 3.10.4
+          pyinstaller_version: 5.2
+          artifact: clbx
+          use-dependencies: true
+          requirements_path: tf_generator/requirements.txt
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: clbx
+          path: dist
 
   build_osx:
     runs-on: macos-12
     steps:
-    - uses: actions/checkout@v3
-    - name: Build Python Executable - MacOS
-      uses: cloudblcks/pyinstaller-build@v0.1
-      with:
-        main: tf_generator/cli
-        python_version: 3.10.4
-        pyinstaller_version: 5.2
-        artifact: clbx_osx
-        use-dependencies: true
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: clbx_osx
-        path: dist
+      - uses: actions/checkout@v3
+      - name: Build Python Executable - MacOS
+        uses: cloudblcks/pyinstaller-build@latest
+        with:
+          main: tf_generator/cli
+          python_version: 3.10.4
+          pyinstaller_version: 5.2
+          artifact: clbx_osx
+          use-dependencies: true
+          requirements_path: tf_generator/requirements.txt
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: clbx_osx
+          path: dist
 
   build_windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: Build Python Executable - Windows
-        uses: eric2788/pyinstaller-build@0.1.3
+        uses: cloudblcks/pyinstaller-build@latest
         with:
           main: tf_generator/cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx.exe
           use-dependencies: true
+          requirements_path: tf_generator/requirements.txt
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
