@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Python Executable - Linux
-        uses: cloudblcks/pyinstaller-build@latest
+        uses: cloudblcks/pyinstaller-build@master
         with:
           main: tf_generator/cli
           python_version: 3.10.4
@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Python Executable - MacOS
-        uses: cloudblcks/pyinstaller-build@latest
+        uses: cloudblcks/pyinstaller-build@master
         with:
           main: tf_generator/cli
           python_version: 3.10.4
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build Python Executable - Windows
-        uses: cloudblcks/pyinstaller-build@latest
+        uses: cloudblcks/pyinstaller-build@master
         with:
           main: tf_generator/cli
           python_version: 3.10.4
