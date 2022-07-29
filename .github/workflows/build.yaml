@@ -15,7 +15,7 @@ jobs:
       - name: Build Python Executable - Linux
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: tf_generator/cli
+          main: ./tf_generator/cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx
@@ -38,7 +38,7 @@ jobs:
       - name: Build Python Executable - MacOS
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: tf_generator/cli
+          main: ./tf_generator/cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx_osx
@@ -61,7 +61,7 @@ jobs:
       - name: Build Python Executable - Windows
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: tf_generator/cli
+          main: ./tf_generator/cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx.exe
