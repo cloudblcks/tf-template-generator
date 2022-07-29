@@ -6,8 +6,8 @@ import cloup
 from cloup.constraints import mutually_exclusive
 from dotenv import load_dotenv
 
-from tf_generator import schema_validator
-from tf_generator import template_writer
+import schema_validator
+import template_writer
 from config import TEMPLATES_MAP_PATH, RESOURCE_SETTINGS
 from generator import TerraformGenerator
 from mapping_loader import load_mapping
