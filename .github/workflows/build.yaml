@@ -15,16 +15,15 @@ jobs:
       - name: Build Python Executable - Linux
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: ./tf_generator/cli
+          root_path: ./tf_generator/
+          main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx
           use-dependencies: true
-          requirements_path: tf_generator/requirements.txt
-          src_path: tf_generator/
           data_paths: |
-            ./tf_generator/data/:data
-            ./tf_generator/templates/:templates
+            ./data/:data
+            ./templates/:templates
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -38,16 +37,15 @@ jobs:
       - name: Build Python Executable - MacOS
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: ./tf_generator/cli
+          root_path: ./tf_generator/
+          main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx_osx
           use-dependencies: true
-          requirements_path: tf_generator/requirements.txt
-          src_path: tf_generator/
           data_paths: |
-            ./tf_generator/data/:data
-            ./tf_generator/templates/:templates
+            ./data/:data
+            ./templates/:templates
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -61,16 +59,15 @@ jobs:
       - name: Build Python Executable - Windows
         uses: cloudblcks/pyinstaller-build@master
         with:
-          main: ./tf_generator/cli
+          root_path: ./tf_generator/
+          main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
           artifact: clbx.exe
           use-dependencies: true
-          requirements_path: tf_generator/requirements.txt
-          src_path: tf_generator/
           data_paths: |
-            ./tf_generator/data/:data
-            ./tf_generator/templates/:templates
+            ./data/;data
+            ./templates/;templates
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
