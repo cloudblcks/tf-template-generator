@@ -27,7 +27,7 @@ resource "aws_iam_policy" "ec2_instance_{{ uid }}_policy" {
         Action = ["s3:ListBucket", "s3:DeleteObject", "s3:CopyObject", "s3:GetObject", "s3:HeadObject", "s3:PutObject", "s3:RestoreObject"],
         Resource = [
          {% for bucket in s3_buckets %}
-        "${aws_s3_bucket.bucket-{{ bucket.uid }}.arn}",
+        aws_s3_bucket.bucket-{{ bucket.uid }}.arn,
         {% endfor %}
         ]
     }
