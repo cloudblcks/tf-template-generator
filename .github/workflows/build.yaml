@@ -23,8 +23,8 @@ jobs:
           requirements_path: tf_generator/requirements.txt
           src_path: tf_generator/
           data_paths: |
-            - ./tf_generator/data/:data
-            - ./tf_generator/templates/:templates
+            ./tf_generator/data/:data
+            ./tf_generator/templates/:templates
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
