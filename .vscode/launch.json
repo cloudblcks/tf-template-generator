@@ -3,11 +3,11 @@
         {
             "type": "aws-sam",
             "request": "direct-invoke",
-            "name": "tf-template-generator:tf_generator/lambda.lambda_handler (python3.9)",
+            "name": "tf-template-generator:tf_generator/aws_lambda.lambda_handler_new (python3.9)",
             "invokeTarget": {
                 "target": "code",
                 "projectRoot": "${workspaceFolder}/",
-                "lambdaHandler": "tf_generator/lambda.lambda_handler"
+                "lambdaHandler": "tf_generator/aws_lambda.lambda_handler_new"
             },
             "lambda": {
                 "runtime": "python3.9",
