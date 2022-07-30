@@ -20,7 +20,7 @@ jobs:
           main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
-          artifact: clbx
+          artifact: cblx
           use-dependencies: true
           data_paths: |
             ./data/:data
@@ -28,7 +28,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: clbx
+          name: cblx
           path: dist
 
   build_osx:
@@ -43,7 +43,7 @@ jobs:
           main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
-          artifact: clbx_osx
+          artifact: cblx_osx
           use-dependencies: true
           data_paths: |
             ./data/:data
@@ -51,7 +51,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: clbx_osx
+          name: cblx_osx
           path: dist
 
   build_windows:
@@ -66,7 +66,7 @@ jobs:
           main: ./cli
           python_version: 3.10.4
           pyinstaller_version: 5.2
-          artifact: clbx.exe
+          artifact: cblx.exe
           use-dependencies: true
           data_paths: |
             ./data/;data
@@ -74,5 +74,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: clbx.exe
+          name: cblx.exe
           path: dist
