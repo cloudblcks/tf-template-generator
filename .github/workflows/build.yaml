@@ -69,8 +69,8 @@ jobs:
           artifact: cblx.exe
           use-dependencies: true
           data_paths: |
-            .\data;data
-            .\templates;templates
+            data;data
+            templates;templates
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
