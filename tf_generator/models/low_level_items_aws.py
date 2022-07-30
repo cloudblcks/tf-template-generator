@@ -6,17 +6,18 @@ from typing import Optional, Dict, Set, List
 import petname
 from jinja2 import Template
 
+from config import TEMPLATES_DIR
 from models.data_model import ServiceTemplate
 from template_loader import load_template
 
-BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
+BASE_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, "base.tf.template")
 
 
 class TemplateLoader:
-    EC2 = "templates/ec2/main.tf.template"
-    VPC = "templates/vpc/main.tf.template"
-    DOCKER = "templates/ecs/main.tf.template"
-    S3 = "templates/s3/main.tf.template"
+    EC2 = os.path.join(TEMPLATES_DIR, "ec2/main.tf.template")
+    VPC = os.path.join(TEMPLATES_DIR, "vpc/main.tf.template")
+    DOCKER = os.path.join(TEMPLATES_DIR, "ecs/main.tf.template")
+    S3 = os.path.join(TEMPLATES_DIR, "s3/main.tf.template")
 
 
 class CloudblocksValidationException(Exception):

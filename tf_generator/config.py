@@ -7,7 +7,7 @@ from models.provider_config import CloudConfig
 from models.tf_type_mapping import ResourceMap
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 AWS_REGION = "us-west-1"
 

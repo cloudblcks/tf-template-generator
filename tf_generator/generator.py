@@ -3,6 +3,7 @@ from typing import Dict, Optional, List, Set
 
 from jinja2 import Template
 
+from config import BASE_DIR, TEMPLATES_DIR
 from models.data_model import ServiceProvider
 from models.high_level_items import (
     HighLevelResource,
@@ -26,8 +27,8 @@ from models.low_level_items_aws import (
 from models.tf_type_mapping import ResourceCategory
 from template_loader import load_template
 
-BASE_TEMPLATE_PATH = os.path.join(os.getcwd(), "templates", "base.tf.template")
-PROVIDER_TEMPLATE_PATH_AWS = "templates/providers/aws.tf.template"
+BASE_TEMPLATE_PATH = os.path.join(TEMPLATES_DIR, "base.tf.template")
+PROVIDER_TEMPLATE_PATH_AWS = os.path.join(TEMPLATES_DIR, "providers", "aws.tf.template")
 
 
 class TerraformGenerator:
