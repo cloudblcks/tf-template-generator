@@ -53,25 +53,25 @@ jobs:
           name: cblx_osx
           path: dist
 
-  build_windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build Python Executable - Windows
-        uses: cloudblcks/pyinstaller-build@master
-        with:
-          root_path: tf_generator
-          dist: ..\dist
-          main: cli
-          python_version: 3.10.4
-          pyinstaller_version: 5.2
-          artifact: cblx.exe
-          use-dependencies: true
-          data_paths: |
-            .\\data;data
-            .\\templates;templates
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: cblx.exe
-          path: dist
+#  build_windows:
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Build Python Executable - Windows
+#        uses: cloudblcks/pyinstaller-build@master
+#        with:
+#          root_path: tf_generator
+#          dist: ..\dist
+#          main: cli
+#          python_version: 3.10.4
+#          pyinstaller_version: 5.2
+#          artifact: cblx.exe
+#          use-dependencies: true
+#          data_paths: |
+#            .\\data;data
+#            .\\templates;templates
+#      - name: Upload Artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: cblx.exe
+#          path: dist
