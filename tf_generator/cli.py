@@ -173,7 +173,7 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
 
 
 def _build(data):
-    print("Building Terraform from mapping...")
+    print("Building Terraform from configuration...")
     generator = TerraformGenerator()
     templates = generator.generate_template_from_json(data)
     print("Build done.")
