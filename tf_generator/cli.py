@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from typing import Optional, List, Tuple
 
 import cloup
@@ -86,7 +87,9 @@ def build(file, data, output_path):
 
     templates = _build(data)
     if output_path:
+        print(f"Writing Terraform to {os.path.abspath(output_path)}...")
         template_writer.write(output_path, templates)
+        print("Finished writing.")
     else:
         print(templates)
 
@@ -170,20 +173,23 @@ def search(keyword: Optional[str], cloud: Optional[str], tags: Optional[List[str
 
 
 def _build(data):
+    print("Building Terraform from configuration...")
     generator = TerraformGenerator()
     templates = generator.generate_template_from_json(data)
+    print("Build done.")
     return templates
 
 
 def _validate(data, verbose=False) -> Tuple[bool, Optional[str]]:
+    print("Checking whether configuration is valid...")
     is_valid, err_message = schema_validator.validate(data)
 
     if is_valid:
-        print("Configuration is valid")
+        print("Configuration is valid.")
     elif verbose:
         print(err_message)
     else:
-        print("Configuration isn't valid")
+        print("Configuration isn't valid.")
 
     return is_valid, err_message
 
