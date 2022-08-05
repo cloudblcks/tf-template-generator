@@ -1,6 +1,5 @@
 #!/bin/bash
 cd ..
-cd ..
 mkdir temp/
 cd tf_generator
 for file in tests/samples/*

@@ -13,9 +13,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-    defaults:
-      run:
-        working-directory: tf_generator
 
     steps:
       - uses: actions/checkout@v3

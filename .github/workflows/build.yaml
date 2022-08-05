@@ -14,7 +14,7 @@ jobs:
       - name: Build Python Executable - Linux
         uses: cloudblcks/pyinstaller-build@master
         with:
-          root_path: ./tf_generator/
+          root_path: ./
           dist: ../dist
           main: ./cli
           python_version: 3.10.4
@@ -37,7 +37,7 @@ jobs:
       - name: Build Python Executable - MacOS
         uses: cloudblcks/pyinstaller-build@master
         with:
-          root_path: ./tf_generator/
+          root_path: ./
           dist: ../dist
           main: ./cli
           python_version: 3.10.4
