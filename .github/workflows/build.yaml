@@ -60,7 +60,7 @@ jobs:
 #      - name: Build Python Executable - Windows
 #        uses: cloudblcks/pyinstaller-build@master
 #        with:
-#          root_path: tf_generator
+#          root_path: ./
 #          dist: ..\dist
 #          main: cli
 #          python_version: 3.10.4

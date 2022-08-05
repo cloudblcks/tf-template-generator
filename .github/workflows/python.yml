@@ -1,4 +1,4 @@
-name: Python (in `/tf_generator`)
+name: Python
 
 on: 
   push:
